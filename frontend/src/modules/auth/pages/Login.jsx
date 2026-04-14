@@ -28,15 +28,15 @@ export const Login = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     setError('');
-
+  
     try {
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
-
+  
       if (error) throw error;
-
+  
       const { data: tenantData, error: tenantError } = await supabase
         .from('tenant_users')
         .select(`
@@ -45,16 +45,16 @@ export const Login = () => {
         `)
         .eq('user_id', authData.user.id)
         .single();
-
+  
       if (tenantError) throw tenantError;
-
+  
       localStorage.setItem('tenant_slug', tenantData.tenants.slug);
       localStorage.setItem('tenant_name', tenantData.tenants.name);
       localStorage.setItem('user_email', authData.user.email);
-
-      // ✅ CAMBIO: Usar dominio real
+  
+      // ✅ Redirigir a admin.jgsystemsgt.com/[slug]
       const slug = tenantData.tenants.slug;
-      window.location.href = `https://${slug}.jgsystemsgt.com/dashboard`;
+      window.location.href = `https://admin.jgsystemsgt.com/${slug}`;
       
     } catch (err) {
       setError(err.message === 'Invalid login credentials' 

@@ -6,12 +6,7 @@ import Login from './modules/auth/pages/Login';
 import Register from './modules/auth/pages/Register';
 import DashboardLayout from './modules/dashboard/components/DashboardLayout';
 import DashboardHome from './modules/dashboard/pages/DashboardHome';
-import { useSubdomain } from './hooks/useSubdomain';
 
-// Lista de subdominios que NO son tenants
-const IGNORED_SUBDOMAINS = ['www', 'api', 'app', 'admin', 'mail', 'ftp', 'smtp', 'localhost', 'jgsystemsgt'];
-
-// Placeholder para páginas
 const PlaceholderPage = ({ title }) => (
   <div className="glass rounded-2xl p-8 border border-primary/20">
     <h2 className="text-2xl font-bold text-white mb-4">{title}</h2>
@@ -19,34 +14,28 @@ const PlaceholderPage = ({ title }) => (
   </div>
 );
 
-// Componente para tienda pública del tenant
-const TenantStore = ({ subdomain }) => {
-  const [tenant, setTenant] = useState(null);
+// Componente para rutas de admin
+const AdminRoutes = () => {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [tenantSlug, setTenantSlug] = useState(null);
 
   useEffect(() => {
-    const fetchTenant = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('tenants')
-          .select('*')
-          .eq('slug', subdomain)
-          .single();
-
-        if (error) throw error;
-        setTenant(data);
-      } catch (err) {
-        setError('Tienda no encontrada');
-      } finally {
-        setLoading(false);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        setAuthenticated(true);
+        // Obtener slug del tenant
+        const slug = localStorage.getItem('tenant_slug');
+        setTenantSlug(slug);
       }
+      
+      setLoading(false);
     };
-
-    if (subdomain) {
-      fetchTenant();
-    }
-  }, [subdomain]);
+    
+    checkAuth();
+  }, []);
 
   if (loading) {
     return (
@@ -56,75 +45,48 @@ const TenantStore = ({ subdomain }) => {
     );
   }
 
-  if (error || !tenant) {
-    return (
-      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
-        <div className="glass rounded-2xl p-8 border border-red-500/30 text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">🏗️ Tienda no encontrada</h2>
-          <p className="text-slate-400 mb-6">
-            El subdominio <strong>{subdomain}</strong> no está registrado.
-          </p>
-          <a 
-            href="https://jgsystemsgt.com"
-            className="text-primary hover:underline"
-          >
-            Ir a ModularBusiness
-          </a>
-        </div>
-      </div>
-    );
+  if (!authenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Redirigir a /dashboard si no hay slug en la URL
+  const path = window.location.pathname;
+  if (path === '/admin' || path === '/admin/') {
+    return <Navigate to={`/admin/${tenantSlug}`} replace />;
   }
 
   return (
-    <div className="min-h-screen bg-dark-950">
-      <div className="glass p-4 border-b border-primary/20">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gradient">{tenant.name}</h1>
-          <span className="text-slate-400 text-sm">{subdomain}.jgsystemsgt.com</span>
-        </div>
-      </div>
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="glass rounded-2xl p-8 border border-primary/20 text-center">
-          <h2 className="text-xl text-white mb-4">🏗️ Tienda en construcción</h2>
-          <p className="text-slate-400">
-            La tienda de <strong>{tenant.name}</strong> estará disponible próximamente.
-          </p>
-        </div>
-      </div>
-    </div>
+    <Routes>
+      <Route path="/:slug" element={<DashboardLayout />}>
+        <Route index element={<DashboardHome />} />
+        <Route path="products" element={<PlaceholderPage title="Productos" />} />
+        <Route path="inventory" element={<PlaceholderPage title="Inventario" />} />
+        <Route path="accounting" element={<PlaceholderPage title="Contabilidad" />} />
+        <Route path="settings" element={<PlaceholderPage title="Configuración" />} />
+      </Route>
+    </Routes>
   );
 };
 
 function App() {
-  const { subdomain, isMainDomain } = useSubdomain();
+  const hostname = window.location.hostname;
+  const isAdmin = hostname.startsWith('admin.');
 
-  // Verificar si es un subdominio ignorado
-  const isIgnoredSubdomain = subdomain && IGNORED_SUBDOMAINS.includes(subdomain.toLowerCase());
-  
-  // Si es un subdominio real (no ignorado), mostrar la tienda del tenant
-  if (!isMainDomain && subdomain && !isIgnoredSubdomain) {
-    return <TenantStore subdomain={subdomain} />;
+  // Si es admin.jgsystemsgt.com
+  if (isAdmin) {
+    return (
+      <Routes>
+        <Route path="/*" element={<AdminRoutes />} />
+      </Routes>
+    );
   }
 
-  // Si es dominio principal o subdominio ignorado, mostrar rutas normales
+  // Si es jgsystemsgt.com (dominio principal)
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      
-      {/* Dashboard Routes */}
-      <Route path="/dashboard" element={<DashboardLayout />}>
-        <Route index element={<DashboardHome />} />
-        <Route path="store" element={<PlaceholderPage title="Tienda" />} />
-        <Route path="products" element={<PlaceholderPage title="Productos" />} />
-        <Route path="orders" element={<PlaceholderPage title="Órdenes" />} />
-        <Route path="customers" element={<PlaceholderPage title="Clientes" />} />
-        <Route path="bookings" element={<PlaceholderPage title="Reservas" />} />
-        <Route path="finance" element={<PlaceholderPage title="Finanzas" />} />
-        <Route path="settings" element={<PlaceholderPage title="Configuración" />} />
-      </Route>
-      
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
