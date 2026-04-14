@@ -18,16 +18,15 @@ function App() {
   const hostname = window.location.hostname;
   const isAdmin = hostname.startsWith('admin.');
 
-  // ✅ Panel de administración (admin.jgsystemsgt.com)
   if (isAdmin) {
     return (
       <Routes>
-        {/* Onboarding (público dentro de admin, pero sin protección extra) */}
-        <Route path="/onboarding" element={<ChooseModules />} />
-
-        {/* Dashboard protegido */}
+        {/* Onboarding con slug */}
+        <Route path="/:slug/onboarding" element={<ChooseModules />} />
+        
+        {/* Dashboard con slug */}
         <Route
-          path="/*"
+          path="/:slug/*"
           element={
             <ProtectedRoute>
               <DashboardLayout />
@@ -41,11 +40,14 @@ function App() {
           <Route path="accounting" element={<PlaceholderPage title="Contabilidad" />} />
           <Route path="settings" element={<PlaceholderPage title="Configuración" />} />
         </Route>
+        
+        {/* Redirigir raíz de admin al login principal si no está autenticado */}
+        <Route path="/" element={<Navigate to="https://jgsystemsgt.com/login" replace />} />
+        <Route path="*" element={<Navigate to="https://jgsystemsgt.com/login" replace />} />
       </Routes>
     );
   }
 
-  // ✅ Dominio principal (jgsystemsgt.com)
   return (
     <Routes>
       <Route path="/" element={<Home />} />

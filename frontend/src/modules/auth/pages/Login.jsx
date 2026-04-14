@@ -63,9 +63,9 @@ export const Login = () => {
 
       // ✅ Redirigir SIEMPRE a /dashboard (o /onboarding si no tiene módulos)
       if (!hasModules || isTrial) {
-        window.location.href = `https://admin.jgsystemsgt.com/onboarding`;
+        window.location.href = `https://admin.jgsystemsgt.com/${slug}/onboarding`;
       } else {
-        window.location.href = `https://admin.jgsystemsgt.com/dashboard`;
+        window.location.href = `https://admin.jgsystemsgt.com/${slug}/dashboard`;
       }
 
     } catch (err) {
