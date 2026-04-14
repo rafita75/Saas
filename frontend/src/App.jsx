@@ -2,11 +2,14 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
 import { Home } from './modules/landing/pages/Home';
-import {Login} from './modules/auth/pages/Login';
-import {Register} from './modules/auth/pages/Register';
+import Login from './modules/auth/pages/Login';
+import Register from './modules/auth/pages/Register';
 import DashboardLayout from './modules/dashboard/components/DashboardLayout';
 import DashboardHome from './modules/dashboard/pages/DashboardHome';
 import { useSubdomain } from './hooks/useSubdomain';
+
+// Lista de subdominios que NO son tenants
+const IGNORED_SUBDOMAINS = ['www', 'api', 'app', 'admin', 'mail', 'ftp', 'smtp', 'localhost', 'jgsystemsgt'];
 
 // Placeholder para páginas
 const PlaceholderPage = ({ title }) => (
@@ -62,7 +65,7 @@ const TenantStore = ({ subdomain }) => {
             El subdominio <strong>{subdomain}</strong> no está registrado.
           </p>
           <a 
-            href="http://modularbusiness.local:5173"
+            href="https://jgsystemsgt.com"
             className="text-primary hover:underline"
           >
             Ir a ModularBusiness
@@ -77,7 +80,7 @@ const TenantStore = ({ subdomain }) => {
       <div className="glass p-4 border-b border-primary/20">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gradient">{tenant.name}</h1>
-          <span className="text-slate-400 text-sm">{subdomain}.modularbusiness.local</span>
+          <span className="text-slate-400 text-sm">{subdomain}.jgsystemsgt.com</span>
         </div>
       </div>
       <div className="max-w-7xl mx-auto p-6">
@@ -95,12 +98,15 @@ const TenantStore = ({ subdomain }) => {
 function App() {
   const { subdomain, isMainDomain } = useSubdomain();
 
-  // Si es un subdominio, mostrar la tienda del tenant
-  if (!isMainDomain && subdomain) {
+  // Verificar si es un subdominio ignorado
+  const isIgnoredSubdomain = subdomain && IGNORED_SUBDOMAINS.includes(subdomain.toLowerCase());
+  
+  // Si es un subdominio real (no ignorado), mostrar la tienda del tenant
+  if (!isMainDomain && subdomain && !isIgnoredSubdomain) {
     return <TenantStore subdomain={subdomain} />;
   }
 
-  // Si es dominio principal, mostrar rutas normales
+  // Si es dominio principal o subdominio ignorado, mostrar rutas normales
   return (
     <Routes>
       <Route path="/" element={<Home />} />
