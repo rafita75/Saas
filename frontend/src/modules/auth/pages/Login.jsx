@@ -28,15 +28,15 @@ export const Login = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     setError('');
-  
+
     try {
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
-  
+
       if (error) throw error;
-  
+
       const { data: tenantData, error: tenantError } = await supabase
         .from('tenant_users')
         .select(`
@@ -45,34 +45,32 @@ export const Login = () => {
         `)
         .eq('user_id', authData.user.id)
         .single();
-  
+
       if (tenantError) throw tenantError;
-  
+
       localStorage.setItem('tenant_slug', tenantData.tenants.slug);
       localStorage.setItem('tenant_name', tenantData.tenants.name);
       localStorage.setItem('user_email', authData.user.email);
-      
-      // Guardar módulos seleccionados en localStorage
+
       if (tenantData.tenants.selected_modules) {
         localStorage.setItem('selected_modules', JSON.stringify(tenantData.tenants.selected_modules));
       }
 
-      const slug = tenantData.tenants.slug;
-      const hasModules = tenantData.tenants.selected_modules && 
+      const hasModules = tenantData.tenants.selected_modules &&
                          tenantData.tenants.selected_modules.length > 0;
-      const isTrial = tenantData.tenants.subscription_status === 'trial' || 
+      const isTrial = tenantData.tenants.subscription_status === 'trial' ||
                       !tenantData.tenants.subscription_status;
 
-      // ✅ Si no tiene módulos o está en trial, ir a onboarding
+      // ✅ Redirigir SIEMPRE a /dashboard (o /onboarding si no tiene módulos)
       if (!hasModules || isTrial) {
         window.location.href = `https://admin.jgsystemsgt.com/onboarding`;
       } else {
-        window.location.href = `https://admin.jgsystemsgt.com/${slug}`;
+        window.location.href = `https://admin.jgsystemsgt.com/dashboard`;
       }
-      
+
     } catch (err) {
-      setError(err.message === 'Invalid login credentials' 
-        ? 'Email o contraseña incorrectos' 
+      setError(err.message === 'Invalid login credentials'
+        ? 'Email o contraseña incorrectos'
         : err.message);
     } finally {
       setLoading(false);
@@ -86,7 +84,7 @@ export const Login = () => {
       <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float animation-delay-1000" />
       <div className="absolute top-1/4 right-1/3 w-56 h-56 bg-accent/5 rounded-full blur-3xl animate-pulse-slow" />
-      
+
       <div className="max-w-md w-full relative z-10">
         {/* Logo con animación */}
         <Link to="/" className="flex items-center justify-center gap-2 mb-8 group">
@@ -149,8 +147,8 @@ export const Login = () => {
             </div>
 
             <div className="text-right animate-fade-in-up animation-delay-400">
-              <Link 
-                to="/forgot-password" 
+              <Link
+                to="/forgot-password"
                 className="text-sm text-primary hover:text-secondary transition-colors"
               >
                 ¿Olvidaste tu contraseña?
@@ -165,7 +163,7 @@ export const Login = () => {
               >
                 {/* Efecto shimmer */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                
+
                 <span className="relative flex items-center gap-2">
                   {loading ? (
                     <>
