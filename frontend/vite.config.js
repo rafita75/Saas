@@ -7,5 +7,16 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    
   ],
+  server: {
+    host: true,
+    port: 5173,
+    strictPort: true,
+    allowedHosts: [
+      'localhost',
+      'modularbusiness.local',
+      '.modularbusiness.local'  // Acepta todos los subdominios
+    ]
+  }
 })

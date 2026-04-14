@@ -13,7 +13,7 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Contraseña requerida'),
 });
 
-const Login = () => {
+export const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -51,8 +51,11 @@ const Login = () => {
 
       localStorage.setItem('tenant_slug', tenantData.tenants.slug);
       localStorage.setItem('tenant_name', tenantData.tenants.name);
+      localStorage.setItem('user_email', authData.user.email);
 
-      navigate('/dashboard');
+      
+      const slug = tenantData.tenants.slug;
+      window.location.href = `http://${slug}.modularbusiness.local:5173/dashboard`;
     } catch (err) {
       setError(err.message === 'Invalid login credentials' 
         ? 'Email o contraseña incorrectos' 
@@ -203,5 +206,3 @@ const Login = () => {
     </div>
   );
 };
-
-export default Login;
