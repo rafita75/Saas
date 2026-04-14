@@ -197,17 +197,20 @@ export const Login = () => {
           <button
             type="button"
             onClick={async () => {
+              setLoading(true);
+              setError('');
+              
               const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
                   redirectTo: 'https://admin.jgsystemsgt.com/dashboard',
-                  queryParams: {
-                    access_type: 'offline',
-                    prompt: 'consent',
-                  },
                 },
               });
-              if (error) setError(error.message);
+              
+              if (error) {
+                setError(error.message);
+                setLoading(false);
+              }
             }}
             className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-slate-700 text-white font-medium hover:bg-dark-800/50 transition"
           >
