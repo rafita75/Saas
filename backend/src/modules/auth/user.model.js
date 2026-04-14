@@ -12,19 +12,10 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 8,
   },
   fullName: {
     type: String,
     required: true,
-  },
-  avatar: {
-    type: String,
-    default: '',
-  },
-  isVerified: {
-    type: Boolean,
-    default: false,
   },
   createdAt: {
     type: Date,
@@ -32,16 +23,9 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// Hash password antes de guardar
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
+// ✅ CORRECCIÓN: Quitar el middleware pre-save
+// Hashearemos la contraseña manualmente en el controlador
 
-// Método para comparar contraseñas
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
