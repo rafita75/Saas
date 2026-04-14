@@ -3,6 +3,13 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 
+import { 
+  authLimiter, 
+  apiLimiter, 
+  webhookLimiter, 
+  uploadLimiter 
+} from './src/core/middleware/rate-limit.js';
+
 dotenv.config();
 
 const app = express();

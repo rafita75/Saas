@@ -4,14 +4,26 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '../../../lib/supabase';
-import { Mail, User, Sparkles, ArrowRight, Check, Rocket } from 'lucide-react';
+import { Mail, User, Sparkles, ArrowRight, Check, Rocket, Building2, Eye, EyeOff, Lock } from 'lucide-react';
 import { Input } from '../../../shared/components/Input';
 import { PasswordInput } from '../../../shared/components/PasswordInput';
 
+// ✅ Esquema de validación mejorado
 const registerSchema = z.object({
   fullName: z.string().min(3, 'Nombre debe tener al menos 3 caracteres'),
+  businessName: z.string()
+    .min(3, 'Nombre del negocio debe tener al menos 3 caracteres')
+    .regex(/^[a-zA-Z0-9\s\-&]+$/, 'Solo letras, números, espacios, guiones y &'),
   email: z.string().email('Email inválido'),
-  password: z.string().min(8, 'Contraseña debe tener al menos 8 caracteres'),
+  password: z.string()
+    .min(8, 'Mínimo 8 caracteres')
+    .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
+    .regex(/[0-9]/, 'Debe contener al menos un número')
+    .regex(/[^A-Za-z0-9]/, 'Debe contener al menos un símbolo'),
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Las contraseñas no coinciden",
+  path: ["confirmPassword"],
 });
 
 export const Register = () => {
@@ -19,33 +31,104 @@ export const Register = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(registerSchema),
   });
+
+  const password = watch('password', '');
+
+  // ✅ Calcular fortaleza de contraseña
+  const calculateStrength = (pwd) => {
+    let strength = 0;
+    if (pwd.length >= 8) strength++;
+    if (pwd.match(/[A-Z]/)) strength++;
+    if (pwd.match(/[0-9]/)) strength++;
+    if (pwd.match(/[^A-Za-z0-9]/)) strength++;
+    return strength;
+  };
+
+  // ✅ Generar slug desde nombre del negocio
+  const generateSlug = (name) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  };
 
   const onSubmit = async (data) => {
     setLoading(true);
     setError('');
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const slug = generateSlug(data.businessName);
+      
+      // ✅ Verificar si el slug ya existe
+      const { data: existingTenant } = await supabase
+        .from('tenants')
+        .select('slug')
+        .eq('slug', slug)
+        .single();
+
+      if (existingTenant) {
+        setError('Este nombre de negocio ya está registrado. Prueba con otro.');
+        setLoading(false);
+        return;
+      }
+
+      // ✅ Registrar usuario en Supabase
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           data: {
             full_name: data.fullName,
+            business_name: data.businessName,
+            tenant_slug: slug,
           },
-          // ✅ CAMBIO: Usar dominio real
           emailRedirectTo: `https://jgsystemsgt.com/login`,
         },
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+
+      // ✅ Crear tenant manualmente para asegurar el slug correcto
+      const { error: tenantError } = await supabase
+        .from('tenants')
+        .insert({
+          name: data.businessName,
+          slug: slug,
+          owner_id: authData.user.id,
+          subscription_status: 'trial',
+          trial_ends_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        });
+
+      if (tenantError) throw tenantError;
+
+      // ✅ Crear relación tenant_user
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('id')
+        .eq('slug', slug)
+        .single();
+
+      await supabase
+        .from('tenant_users')
+        .insert({
+          tenant_id: tenant.id,
+          user_id: authData.user.id,
+          role: 'owner',
+        });
 
       setRegisteredEmail(data.email);
       setSuccess(true);
@@ -64,7 +147,6 @@ export const Register = () => {
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10" />
-        
         <div className="max-w-md w-full relative z-10">
           <div className="glass rounded-2xl p-8 border border-primary/20 text-center animate-scale-up">
             <div className="relative">
@@ -73,24 +155,11 @@ export const Register = () => {
                 <Check className="w-10 h-10 text-green-400 animate-bounce" />
               </div>
             </div>
-            
-            <h2 className="text-2xl font-bold text-white mb-2 animate-fade-in-up">
-              ¡Revisa tu correo!
-            </h2>
-            
-            <p className="text-slate-400 mb-6 animate-fade-in-up animation-delay-100">
-              Hemos enviado un enlace de verificación a{' '}
-              <strong className="text-white">{registeredEmail}</strong>
+            <h2 className="text-2xl font-bold text-white mb-2">¡Revisa tu correo!</h2>
+            <p className="text-slate-400 mb-6">
+              Hemos enviado un enlace de verificación a <strong className="text-white">{registeredEmail}</strong>
             </p>
-            
-            <p className="text-sm text-slate-500 mb-6 animate-fade-in-up animation-delay-200">
-              Confirma tu cuenta para activar tu período de prueba de 3 días.
-            </p>
-            
-            <Link
-              to="/login"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-medium hover:glow-effect transition-all duration-300 animate-fade-in-up animation-delay-300"
-            >
+            <Link to="/login" className="group inline-flex items-center gap-2 bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-medium hover:glow-effect transition">
               Ir a Iniciar Sesión
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -102,30 +171,22 @@ export const Register = () => {
 
   return (
     <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4 relative overflow-hidden py-12">
-      {/* Fondos decorativos animados */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10" />
       <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float animation-delay-1000" />
-      <div className="absolute top-1/3 right-1/4 w-48 h-48 bg-accent/5 rounded-full blur-3xl animate-pulse-slow" />
       
       <div className="max-w-md w-full relative z-10">
-        {/* Logo con animación */}
         <Link to="/" className="flex items-center justify-center gap-2 mb-8 group">
           <div className="relative">
             <div className="absolute inset-0 bg-primary/30 rounded-full blur-lg group-hover:blur-xl transition-all duration-300" />
             <Sparkles className="relative w-8 h-8 text-primary group-hover:animate-pulse" />
           </div>
           <div className="flex flex-col">
-            <span className="text-3xl font-bold text-gradient animate-fade-in-down">
-              ModularBusiness
-            </span>
-            <span className="text-xs text-slate-400 -mt-1 text-center animate-fade-in-down animation-delay-100">
-              by J&H Systems
-            </span>
+            <span className="text-3xl font-bold text-gradient">ModularBusiness</span>
+            <span className="text-xs text-slate-400 -mt-1 text-center">by J&H Systems</span>
           </div>
         </Link>
 
-        {/* Badge de prueba gratis */}
         <div className="flex justify-center mb-4 animate-fade-in-up">
           <span className="glass-light px-4 py-1.5 rounded-full text-xs flex items-center gap-2 border border-primary/30">
             <Rocket size={12} className="text-primary animate-pulse" />
@@ -133,110 +194,133 @@ export const Register = () => {
           </span>
         </div>
 
-        {/* Card */}
-        <div className="glass rounded-2xl p-8 border border-primary/20 animate-fade-in-up animation-delay-100 hover:border-primary/40 transition-all duration-500">
-          <h2 className="text-2xl font-bold text-white mb-2 text-center">
-            Crea tu cuenta gratis
-          </h2>
-          <p className="text-slate-400 text-center mb-6">
-            Comienza a construir tu sistema hoy
-          </p>
+        <div className="glass rounded-2xl p-8 border border-primary/20 animate-fade-in-up">
+          <h2 className="text-2xl font-bold text-white mb-2 text-center">Crea tu cuenta gratis</h2>
+          <p className="text-slate-400 text-center mb-6">Comienza a construir tu sistema hoy</p>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm animate-fade-in">
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div className="animate-fade-in-up animation-delay-200">
-              <Input
-                label="Nombre completo"
-                icon={User}
-                placeholder="Juan Pérez"
-                error={errors.fullName?.message}
-                {...register('fullName')}
-              />
+            <Input
+              label="Nombre completo"
+              icon={User}
+              placeholder="Juan Pérez"
+              error={errors.fullName?.message}
+              {...register('fullName')}
+            />
+
+            {/* ✅ NUEVO: Campo nombre del negocio */}
+            <Input
+              label="Nombre de tu negocio"
+              icon={Building2}
+              placeholder="Mi Negocio GT"
+              error={errors.businessName?.message}
+              {...register('businessName')}
+            />
+
+            <Input
+              label="Correo electrónico"
+              type="email"
+              icon={Mail}
+              placeholder="juan@empresa.com"
+              error={errors.email?.message}
+              {...register('email')}
+            />
+
+            {/* ✅ Contraseña con indicador de fortaleza */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Contraseña</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  {...register('password')}
+                  onChange={(e) => {
+                    register('password').onChange(e);
+                    setPasswordStrength(calculateStrength(e.target.value));
+                  }}
+                  className="w-full pl-10 pr-10 py-3 bg-dark-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder="••••••••"
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {/* ✅ Indicador de fortaleza */}
+              {password && (
+                <div className="mt-2">
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4].map((level) => (
+                      <div
+                        key={level}
+                        className={`h-1.5 flex-1 rounded-full transition-all ${
+                          passwordStrength >= level
+                            ? level <= 2 ? 'bg-red-500' : level === 3 ? 'bg-yellow-500' : 'bg-green-500'
+                            : 'bg-slate-700'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {passwordStrength <= 2 && 'Débil - Agrega mayúsculas, números y símbolos'}
+                    {passwordStrength === 3 && 'Media - ¡Casi llegas!'}
+                    {passwordStrength === 4 && '✅ Fuerte - ¡Excelente!'}
+                  </p>
+                </div>
+              )}
+              {errors.password && <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>}
             </div>
 
-            <div className="animate-fade-in-up animation-delay-300">
-              <Input
-                label="Correo electrónico"
-                type="email"
-                icon={Mail}
-                placeholder="juan@empresa.com"
-                error={errors.email?.message}
-                {...register('email')}
-              />
+            {/* ✅ Confirmar contraseña */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Confirmar contraseña</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  {...register('confirmPassword')}
+                  className="w-full pl-10 pr-10 py-3 bg-dark-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder="••••••••"
+                />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.confirmPassword && <p className="mt-1 text-sm text-red-400">{errors.confirmPassword.message}</p>}
             </div>
 
-            <div className="animate-fade-in-up animation-delay-400">
-              <PasswordInput
-                label="Contraseña"
-                placeholder="Mínimo 8 caracteres"
-                error={errors.password?.message}
-                {...register('password')}
-              />
-            </div>
-
-            <div className="animate-fade-in-up animation-delay-500">
-              <button
-                type="submit"
-                disabled={loading}
-                className="group relative w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-xl font-medium hover:glow-effect transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
-              >
-                {/* Efecto shimmer */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                
-                <span className="relative flex items-center gap-2">
-                  {loading ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Creando cuenta...
-                    </>
-                  ) : (
-                    <>
-                      Comenzar prueba gratis
-                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </span>
-              </button>
-            </div>
+            <button type="submit" disabled={loading} className="group relative w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-xl font-medium hover:glow-effect transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+              <span className="relative flex items-center gap-2">
+                {loading ? 'Creando cuenta...' : (
+                  <>Comenzar prueba gratis <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>
+                )}
+              </span>
+            </button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-6 animate-fade-in-up animation-delay-600">
+          <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-700/50"></div>
             </div>
             <div className="relative flex justify-center">
-              <span className="px-4 py-1 bg-dark-900/80 backdrop-blur-sm rounded-full text-xs text-slate-400 border border-slate-700/30">
-                ¿Ya tienes cuenta?
-              </span>
+              <span className="px-4 py-1 bg-dark-900/80 backdrop-blur-sm rounded-full text-xs text-slate-400 border border-slate-700/30">¿Ya tienes cuenta?</span>
             </div>
           </div>
 
-          {/* Login CTA */}
-          <div className="animate-fade-in-up animation-delay-700">
-            <Link
-              to="/login"
-              className="group block w-full text-center py-3 rounded-xl border border-slate-700 text-white font-medium hover:bg-dark-800/50 hover:border-slate-600 transition-all duration-300"
-            >
-              <span className="group-hover:text-primary transition-colors">Iniciar sesión</span>
-            </Link>
-          </div>
+          <Link to="/login" className="group block w-full text-center py-3 rounded-xl border border-slate-700 text-white font-medium hover:bg-dark-800/50 hover:border-slate-600 transition">
+            Iniciar sesión
+          </Link>
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-xs text-slate-500 mt-6 animate-fade-in-up animation-delay-800">
+        <p className="text-center text-xs text-slate-500 mt-6">
           Al registrarte aceptas nuestros{' '}
-          <Link to="/terms" className="text-primary hover:underline hover:text-secondary transition-colors">Términos</Link>
-          {' '}y{' '}
-          <Link to="/privacy" className="text-primary hover:underline hover:text-secondary transition-colors">Privacidad</Link>
+          <Link to="/terms" className="text-primary hover:underline">Términos</Link> y{' '}
+          <Link to="/privacy" className="text-primary hover:underline">Privacidad</Link>
         </p>
       </div>
     </div>
