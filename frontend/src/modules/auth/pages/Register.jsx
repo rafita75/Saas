@@ -40,7 +40,8 @@ export const Register = () => {
           data: {
             full_name: data.fullName,
           },
-          emailRedirectTo: `${window.location.origin}/login`,
+          // ✅ CAMBIO: Usar dominio real
+          emailRedirectTo: `https://jgsystemsgt.com/login`,
         },
       });
 
@@ -62,13 +63,13 @@ export const Register = () => {
   if (success) {
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-transparent to-secondary/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10" />
         
         <div className="max-w-md w-full relative z-10">
           <div className="glass rounded-2xl p-8 border border-primary/20 text-center animate-scale-up">
             <div className="relative">
-              <div className="absolute inset-0 bg-linear-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl animate-pulse" />
-              <div className="relative w-20 h-20 bg-linear-to-br from-green-500/20 to-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl animate-pulse" />
+              <div className="relative w-20 h-20 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Check className="w-10 h-10 text-green-400 animate-bounce" />
               </div>
             </div>
@@ -88,7 +89,7 @@ export const Register = () => {
             
             <Link
               to="/login"
-              className="group inline-flex items-center gap-2 bg-linear-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-medium hover:glow-effect transition-all duration-300 animate-fade-in-up animation-delay-300"
+              className="group inline-flex items-center gap-2 bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-medium hover:glow-effect transition-all duration-300 animate-fade-in-up animation-delay-300"
             >
               Ir a Iniciar Sesión
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -102,7 +103,7 @@ export const Register = () => {
   return (
     <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4 relative overflow-hidden py-12">
       {/* Fondos decorativos animados */}
-      <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-transparent to-secondary/10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10" />
       <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float animation-delay-1000" />
       <div className="absolute top-1/3 right-1/4 w-48 h-48 bg-accent/5 rounded-full blur-3xl animate-pulse-slow" />
@@ -182,10 +183,10 @@ export const Register = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full bg-linear-to-r from-primary to-secondary text-white py-3 rounded-xl font-medium hover:glow-effect transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+                className="group relative w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-xl font-medium hover:glow-effect transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
               >
                 {/* Efecto shimmer */}
-                <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                 
                 <span className="relative flex items-center gap-2">
                   {loading ? (
@@ -207,9 +208,9 @@ export const Register = () => {
             </div>
           </form>
 
-          {/* Divider CORREGIDO */}
+          {/* Divider */}
           <div className="relative my-6 animate-fade-in-up animation-delay-600">
-            <div className="absolute inset-0 flex items-end m-10">
+            <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-700/50"></div>
             </div>
             <div className="relative flex justify-center">
@@ -241,3 +242,5 @@ export const Register = () => {
     </div>
   );
 };
+
+export default Register;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,7 +14,6 @@ const loginSchema = z.object({
 });
 
 export const Login = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -53,9 +52,10 @@ export const Login = () => {
       localStorage.setItem('tenant_name', tenantData.tenants.name);
       localStorage.setItem('user_email', authData.user.email);
 
-      
+      // ✅ CAMBIO: Usar dominio real
       const slug = tenantData.tenants.slug;
-      window.location.href = `http://${slug}.modularbusiness.local:5173/dashboard`;
+      window.location.href = `https://${slug}.jgsystemsgt.com/dashboard`;
+      
     } catch (err) {
       setError(err.message === 'Invalid login credentials' 
         ? 'Email o contraseña incorrectos' 
@@ -172,9 +172,9 @@ export const Login = () => {
             </div>
           </form>
 
-          {/* Divider CORREGIDO */}
+          {/* Divider */}
           <div className="relative my-6 animate-fade-in-up animation-delay-600">
-            <div className="absolute inset-0 flex items-end m-10">
+            <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-700/50"></div>
             </div>
             <div className="relative flex justify-center">
@@ -206,3 +206,5 @@ export const Login = () => {
     </div>
   );
 };
+
+export default Login;
