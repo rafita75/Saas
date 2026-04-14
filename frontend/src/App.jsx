@@ -1,8 +1,9 @@
 import { Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import { Home } from './modules/landing/pages/Home';
+import { Login } from './modules/auth/pages/Login';
+import { Register } from './modules/auth/pages/Register';
 
-// Dashboard temporal (placeholder)
+// Dashboard temporal (sin comentar)
 const Dashboard = () => (
   <div className="min-h-screen bg-gray-100 flex items-center justify-center">
     <div className="bg-white p-8 rounded-lg shadow-md">
@@ -11,9 +12,6 @@ const Dashboard = () => (
       <p className="text-gray-600 mt-2">
         Tenant: <strong>{localStorage.getItem('tenant_name')}</strong>
       </p>
-      <p className="text-gray-600">
-        Slug: <strong>{localStorage.getItem('tenant_slug')}</strong>
-      </p>
     </div>
   </div>
 );
@@ -21,10 +19,10 @@ const Dashboard = () => (
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/" element={<Login />} />
     </Routes>
   );
 }
