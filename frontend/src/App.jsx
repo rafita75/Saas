@@ -26,7 +26,6 @@ const AdminRoutes = () => {
       
       if (session) {
         setAuthenticated(true);
-        // Obtener slug del tenant del localStorage
         const slug = localStorage.getItem('tenant_slug');
         setTenantSlug(slug);
       }
@@ -45,26 +44,18 @@ const AdminRoutes = () => {
     );
   }
 
+  // ✅ Si no está autenticado, redirigir al login PRINCIPAL
+  if (!authenticated) {
+    window.location.href = 'https://jgsystemsgt.com/login';
+    return null;
+  }
+
   return (
     <Routes>
-      {/* Ruta de login en admin */}
-      <Route 
-        path="/login" 
-        element={
-          authenticated 
-            ? <Navigate to={`/${tenantSlug}`} replace /> 
-            : <Login />
-        } 
-      />
-      
       {/* Dashboard protegido */}
       <Route 
         path="/:slug" 
-        element={
-          authenticated 
-            ? <DashboardLayout /> 
-            : <Navigate to="/login" replace />
-        }
+        element={<DashboardLayout />}
       >
         <Route index element={<DashboardHome />} />
         <Route path="products" element={<PlaceholderPage title="Productos" />} />
@@ -73,18 +64,14 @@ const AdminRoutes = () => {
         <Route path="settings" element={<PlaceholderPage title="Configuración" />} />
       </Route>
       
-      {/* Redirigir raíz de admin */}
+      {/* Redirigir raíz de admin al dashboard del tenant */}
       <Route 
         path="/" 
-        element={
-          authenticated 
-            ? <Navigate to={`/${tenantSlug}`} replace /> 
-            : <Navigate to="/login" replace />
-        } 
+        element={<Navigate to={`/${tenantSlug}`} replace />} 
       />
       
-      {/* Cualquier otra ruta en admin */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Cualquier otra ruta */}
+      <Route path="*" element={<Navigate to={`/${tenantSlug}`} replace />} />
     </Routes>
   );
 };
