@@ -1,6 +1,4 @@
-import { Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import api from '../../../lib/api';
 
 export const ProtectedRoute = ({ children }) => {
   const [loading, setLoading] = useState(true);
@@ -11,21 +9,13 @@ export const ProtectedRoute = ({ children }) => {
       const token = localStorage.getItem('token');
       
       if (!token) {
-        setAuthenticated(false);
-        setLoading(false);
+        // ✅ Redirección nativa, NO React Router
+        window.location.href = 'https://jgsystemsgt.com/login';
         return;
       }
 
-      try {
-        // Verificar token con el backend
-        await api.get('/auth/me');
-        setAuthenticated(true);
-      } catch (error) {
-        localStorage.removeItem('token');
-        setAuthenticated(false);
-      } finally {
-        setLoading(false);
-      }
+      setAuthenticated(true);
+      setLoading(false);
     };
 
     checkAuth();
@@ -40,7 +30,7 @@ export const ProtectedRoute = ({ children }) => {
   }
 
   if (!authenticated) {
-    return <Navigate to="https://jgsystemsgt.com/login" replace />;
+    return null; // Ya redirigió
   }
 
   return children;

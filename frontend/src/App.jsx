@@ -14,6 +14,14 @@ const PlaceholderPage = ({ title }) => (
   </div>
 );
 
+// ✅ Componente para redirección externa
+const ExternalRedirect = ({ to }) => {
+  useEffect(() => {
+    window.location.href = to;
+  }, [to]);
+  return null;
+};
+
 function App() {
   const hostname = window.location.hostname;
   const isAdmin = hostname.startsWith('admin.');
@@ -21,10 +29,8 @@ function App() {
   if (isAdmin) {
     return (
       <Routes>
-        {/* Onboarding con slug */}
         <Route path="/:slug/onboarding" element={<ChooseModules />} />
         
-        {/* Dashboard con slug */}
         <Route
           path="/:slug/*"
           element={
@@ -41,9 +47,9 @@ function App() {
           <Route path="settings" element={<PlaceholderPage title="Configuración" />} />
         </Route>
         
-        {/* Redirigir raíz de admin al login principal si no está autenticado */}
-        <Route path="/" element={<Navigate to="https://jgsystemsgt.com/login" replace />} />
-        <Route path="*" element={<Navigate to="https://jgsystemsgt.com/login" replace />} />
+        {/* ✅ Usar componente de redirección externa */}
+        <Route path="/" element={<ExternalRedirect to="https://jgsystemsgt.com/login" />} />
+        <Route path="*" element={<ExternalRedirect to="https://jgsystemsgt.com/login" />} />
       </Routes>
     );
   }
