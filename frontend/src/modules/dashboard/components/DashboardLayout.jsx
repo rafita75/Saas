@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate, Outlet } from "react-router-dom";
-import { useSubdomain } from "../../../hooks/useSubdomain";
 import {
   LayoutDashboard,
   Package,
@@ -16,7 +15,7 @@ import {
   Calendar,
   Calculator,
 } from "lucide-react";
-import { supabase } from "../../../lib/supabase";
+import api from "../../../lib/api";
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -24,26 +23,26 @@ const DashboardLayout = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const userEmail = localStorage.getItem("user_email") || "usuario@email.com";
+  const tenantName = localStorage.getItem("tenant_name") || "Mi Negocio";
+  const tenantSlug = localStorage.getItem("tenant_slug") || "";
 
-  const { subdomain } = useSubdomain();
-  const tenantName =
-    localStorage.getItem("tenant_name") || subdomain || "Mi Negocio";
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    localStorage.clear();
-    navigate("/login");
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("tenant_slug");
+    localStorage.removeItem("tenant_name");
+    localStorage.removeItem("user_email");
+    window.location.href = "https://jgsystemsgt.com/login";
   };
 
   const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-    { icon: Store, label: "Tienda", path: "/dashboard/store" },
-    { icon: Package, label: "Productos", path: "/dashboard/products" },
-    { icon: ShoppingBag, label: "Órdenes", path: "/dashboard/orders" },
-    { icon: Users, label: "Clientes", path: "/dashboard/customers" },
-    { icon: Calendar, label: "Reservas", path: "/dashboard/bookings" },
-    { icon: Calculator, label: "Finanzas", path: "/dashboard/finance" },
-    { icon: Settings, label: "Configuración", path: "/dashboard/settings" },
+    { icon: LayoutDashboard, label: "Dashboard", path: `/dashboard` },
+    { icon: Store, label: "Tienda", path: `/dashboard/store` },
+    { icon: Package, label: "Productos", path: `/dashboard/products` },
+    { icon: ShoppingBag, label: "Órdenes", path: `/dashboard/orders` },
+    { icon: Users, label: "Clientes", path: `/dashboard/customers` },
+    { icon: Calendar, label: "Reservas", path: `/dashboard/bookings` },
+    { icon: Calculator, label: "Finanzas", path: `/dashboard/finance` },
+    { icon: Settings, label: "Configuración", path: `/dashboard/settings` },
   ];
 
   return (
@@ -59,7 +58,7 @@ const DashboardLayout = () => {
       >
         {/* Sidebar Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-primary/10">
-          <Link to="/dashboard" className="flex items-center gap-2">
+          <Link to={`/${tenantSlug}/dashboard`} className="flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-primary" />
             <span className="font-bold text-gradient text-sm">
               ModularBusiness
@@ -80,7 +79,7 @@ const DashboardLayout = () => {
           <p className="text-xs text-slate-500 mt-2 mb-1">Plan</p>
           <span className="inline-flex items-center gap-1 bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">
             <Sparkles size={10} />
-            Semilla
+            Trial (3 días)
           </span>
         </div>
 
@@ -89,7 +88,7 @@ const DashboardLayout = () => {
           {menuItems.map((item, index) => (
             <Link
               key={index}
-              to={item.path}
+              to={`/${tenantSlug}${item.path}`}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-dark-800/50 transition-all duration-200 group"
             >
               <item.icon

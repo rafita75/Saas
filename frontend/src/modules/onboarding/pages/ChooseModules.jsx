@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../../lib/supabase';
+import api from '../../../lib/api';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -110,22 +110,22 @@ const AVAILABLE_MODULES = [
 
 export const ChooseModules = () => {
   const navigate = useNavigate();
-  const [selectedModules, setSelectedModules] = useState(['customers']); // Customers es obligatorio
+  const [selectedModules, setSelectedModules] = useState(['customers']);
   const [loading, setLoading] = useState(false);
   const [tenantName, setTenantName] = useState('');
+  const [tenantSlug, setTenantSlug] = useState('');
 
   useEffect(() => {
     const name = localStorage.getItem('tenant_name') || '';
+    const slug = localStorage.getItem('tenant_slug') || '';
     setTenantName(name);
+    setTenantSlug(slug);
   }, []);
 
   const toggleModule = (moduleId) => {
     const module = AVAILABLE_MODULES.find(m => m.id === moduleId);
-    
-    // No permitir deseleccionar módulos obligatorios
     if (module?.required) return;
     
-    // No permitir deseleccionar si otros módulos lo requieren
     const isRequiredByOthers = AVAILABLE_MODULES.some(m => 
       m.requires === moduleId && selectedModules.includes(m.id)
     );
@@ -138,7 +138,6 @@ export const ChooseModules = () => {
     );
   };
 
-  // Auto-seleccionar módulos requeridos
   useEffect(() => {
     const modulesToAdd = [];
     selectedModules.forEach(moduleId => {
@@ -164,23 +163,14 @@ export const ChooseModules = () => {
     setLoading(true);
     
     try {
-      const tenantSlug = localStorage.getItem('tenant_slug');
-      
-      // Guardar módulos seleccionados en Supabase
-      const { error } = await supabase
-        .from('tenants')
-        .update({
-          selected_modules: selectedModules,
-          subscription_status: 'pending_payment',
-          monthly_total: calculateTotal()
-        })
-        .eq('slug', tenantSlug);
+      // ✅ Guardar módulos en MongoDB
+      await api.put(`/tenants/${tenantSlug}/modules`, {
+        selectedModules,
+        monthlyTotal: calculateTotal()
+      });
 
-      if (error) throw error;
-
-      // Redirigir a checkout (por ahora al dashboard)
-      // TODO: Integrar con Recurrente
-      navigate('/dashboard');
+      // Redirigir al dashboard
+      window.location.href = `https://admin.jgsystemsgt.com/${tenantSlug}/dashboard`;
       
     } catch (err) {
       console.error('Error guardando módulos:', err);
@@ -194,18 +184,15 @@ export const ChooseModules = () => {
   return (
     <div className="min-h-screen bg-dark-950 py-12 px-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
             ¡Configura tu plan, {tenantName}!
           </h1>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            Elige los módulos que necesitas para tu negocio. 
-            Puedes agregar o quitar módulos en cualquier momento.
+            Elige los módulos que necesitas para tu negocio.
           </p>
         </div>
 
-        {/* Total y CTA */}
         <div className="sticky top-4 z-20 mb-8">
           <div className="glass rounded-2xl p-4 flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
@@ -214,13 +201,13 @@ export const ChooseModules = () => {
                 <p className="text-3xl font-bold text-gradient">Q{total}</p>
               </div>
               <div className="text-sm text-slate-400">
-                {selectedModules.length} módulos seleccionados
+                {selectedModules.length} módulos
               </div>
             </div>
             <button
               onClick={handleContinue}
-              disabled={loading || selectedModules.length === 0}
-              className="group bg-gradient-to-r from-primary to-secondary text-white px-8 py-3 rounded-xl font-semibold hover:glow-effect transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+              className="group bg-gradient-to-r from-primary to-secondary text-white px-8 py-3 rounded-xl font-semibold hover:glow-effect transition-all duration-300 flex items-center gap-2"
             >
               {loading ? 'Guardando...' : 'Continuar'}
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -228,7 +215,6 @@ export const ChooseModules = () => {
           </div>
         </div>
 
-        {/* Grid de módulos */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {AVAILABLE_MODULES.map((module) => {
             const isSelected = selectedModules.includes(module.id);
@@ -248,57 +234,34 @@ export const ChooseModules = () => {
                     : 'border border-slate-700/50 opacity-80'
                 } ${(isDisabled || requiresModule) ? 'cursor-not-allowed' : 'cursor-pointer hover:border-primary/50'}`}
               >
-                {/* Badges */}
                 <div className="absolute top-3 right-3 flex gap-2">
                   {module.required && (
                     <span className="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded-full border border-red-500/30 flex items-center gap-1">
-                      <Lock size={10} />
-                      Obligatorio
+                      <Lock size={10} /> Obligatorio
                     </span>
                   )}
                   {isSelected && (
                     <span className="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-full border border-green-500/30 flex items-center gap-1">
-                      <Check size={10} />
-                      Seleccionado
+                      <Check size={10} /> Seleccionado
                     </span>
                   )}
                 </div>
 
-                {module.requiredFor && isSelected && (
-                  <div className="absolute top-3 left-3">
-                    <span className="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded-full border border-blue-500/30">
-                      Requerido para {module.requiredFor.length} módulos
-                    </span>
-                  </div>
-                )}
-
-                {/* Icono */}
                 <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${module.color} flex items-center justify-center mb-4`}>
                   <module.icon size={28} className={module.iconColor} />
                 </div>
 
-                {/* Nombre y precio */}
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xl font-semibold text-white">{module.name}</h3>
                   <p className="text-xl font-bold text-gradient">Q{module.price}</p>
                 </div>
 
-                {/* Descripción */}
                 <p className="text-slate-400 text-sm mb-3">{module.description}</p>
 
-                {/* Requiere */}
                 {module.requires && (
                   <p className={`text-xs mb-2 flex items-center gap-1 ${requiresModule ? 'text-yellow-400' : 'text-slate-500'}`}>
                     <Shield size={10} />
                     Requiere: {AVAILABLE_MODULES.find(m => m.id === module.requires)?.name}
-                    {requiresModule && ' (selecciónalo primero)'}
-                  </p>
-                )}
-
-                {/* Mensaje de deshabilitado */}
-                {isDisabled && !module.required && (
-                  <p className="text-xs text-slate-500 mt-2">
-                    No puedes deseleccionar este módulo porque otros dependen de él.
                   </p>
                 )}
               </GlowCard>
