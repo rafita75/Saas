@@ -57,6 +57,7 @@ const AdminRoutes = () => {
 
   return (
     <Routes>
+      <Route path="/login" element={<Navigate to="https://jgsystemsgt.com/login" replace />} />
       <Route path="/:slug" element={<DashboardLayout />}>
         <Route index element={<DashboardHome />} />
         <Route path="products" element={<PlaceholderPage title="Productos" />} />
