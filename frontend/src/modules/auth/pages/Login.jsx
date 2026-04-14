@@ -41,7 +41,7 @@ export const Login = () => {
         .from('tenant_users')
         .select(`
           tenant_id,
-          tenants!inner(slug, name)
+          tenants!inner(slug, name, selected_modules, subscription_status)
         `)
         .eq('user_id', authData.user.id)
         .single();
@@ -51,10 +51,24 @@ export const Login = () => {
       localStorage.setItem('tenant_slug', tenantData.tenants.slug);
       localStorage.setItem('tenant_name', tenantData.tenants.name);
       localStorage.setItem('user_email', authData.user.email);
-  
-      // ✅ Redirigir a admin.jgsystemsgt.com/[slug]
+      
+      // Guardar módulos seleccionados en localStorage
+      if (tenantData.tenants.selected_modules) {
+        localStorage.setItem('selected_modules', JSON.stringify(tenantData.tenants.selected_modules));
+      }
+
       const slug = tenantData.tenants.slug;
-      window.location.href = `https://admin.jgsystemsgt.com/${slug}`;
+      const hasModules = tenantData.tenants.selected_modules && 
+                         tenantData.tenants.selected_modules.length > 0;
+      const isTrial = tenantData.tenants.subscription_status === 'trial' || 
+                      !tenantData.tenants.subscription_status;
+
+      // ✅ Si no tiene módulos o está en trial, ir a onboarding
+      if (!hasModules || isTrial) {
+        window.location.href = `https://admin.jgsystemsgt.com/onboarding`;
+      } else {
+        window.location.href = `https://admin.jgsystemsgt.com/${slug}`;
+      }
       
     } catch (err) {
       setError(err.message === 'Invalid login credentials' 

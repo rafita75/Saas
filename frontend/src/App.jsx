@@ -6,6 +6,7 @@ import Login from './modules/auth/pages/Login';
 import Register from './modules/auth/pages/Register';
 import DashboardLayout from './modules/dashboard/components/DashboardLayout';
 import DashboardHome from './modules/dashboard/pages/DashboardHome';
+import ChooseModules from './modules/onboarding/pages/ChooseModules';
 
 const PlaceholderPage = ({ title }) => (
   <div className="glass rounded-2xl p-8 border border-primary/20">
@@ -62,6 +63,7 @@ const AdminRoutes = () => {
         <Route path="inventory" element={<PlaceholderPage title="Inventario" />} />
         <Route path="accounting" element={<PlaceholderPage title="Contabilidad" />} />
         <Route path="settings" element={<PlaceholderPage title="Configuración" />} />
+        <Route path="/onboarding" element={<ChooseModules />} />
       </Route>
       
       {/* Redirigir raíz de admin al dashboard del tenant */}
