@@ -61,6 +61,7 @@ export const Login = () => {
       const isTrial = tenantData.tenants.subscription_status === 'trial' ||
                       !tenantData.tenants.subscription_status;
 
+      const slug = tenantData.tenants.slug;
       // ✅ Redirigir SIEMPRE a /dashboard (o /onboarding si no tiene módulos)
       if (!hasModules || isTrial) {
         window.location.href = `https://admin.jgsystemsgt.com/${slug}/onboarding`;
