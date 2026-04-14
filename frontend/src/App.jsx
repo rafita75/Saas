@@ -26,7 +26,7 @@ const AdminRoutes = () => {
       
       if (session) {
         setAuthenticated(true);
-        // Obtener slug del tenant
+        // Obtener slug del tenant del localStorage
         const slug = localStorage.getItem('tenant_slug');
         setTenantSlug(slug);
       }
@@ -45,26 +45,46 @@ const AdminRoutes = () => {
     );
   }
 
-  if (!authenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Redirigir a /dashboard si no hay slug en la URL
-  const path = window.location.pathname;
-  if (path === '/admin' || path === '/admin/') {
-    return <Navigate to={`/admin/${tenantSlug}`} replace />;
-  }
-
   return (
     <Routes>
-      <Route path="/login" element={<Navigate to="https://jgsystemsgt.com/login" replace />} />
-      <Route path="/:slug" element={<DashboardLayout />}>
+      {/* Ruta de login en admin */}
+      <Route 
+        path="/login" 
+        element={
+          authenticated 
+            ? <Navigate to={`/${tenantSlug}`} replace /> 
+            : <Login />
+        } 
+      />
+      
+      {/* Dashboard protegido */}
+      <Route 
+        path="/:slug" 
+        element={
+          authenticated 
+            ? <DashboardLayout /> 
+            : <Navigate to="/login" replace />
+        }
+      >
         <Route index element={<DashboardHome />} />
         <Route path="products" element={<PlaceholderPage title="Productos" />} />
         <Route path="inventory" element={<PlaceholderPage title="Inventario" />} />
         <Route path="accounting" element={<PlaceholderPage title="Contabilidad" />} />
         <Route path="settings" element={<PlaceholderPage title="Configuración" />} />
       </Route>
+      
+      {/* Redirigir raíz de admin */}
+      <Route 
+        path="/" 
+        element={
+          authenticated 
+            ? <Navigate to={`/${tenantSlug}`} replace /> 
+            : <Navigate to="/login" replace />
+        } 
+      />
+      
+      {/* Cualquier otra ruta en admin */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
@@ -88,7 +108,7 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="*" element={<Navigate to="/" />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
