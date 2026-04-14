@@ -29,7 +29,7 @@ export const Navbar = () => {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <img src='../../public/logo.png' width={35}/>
+            <img src='./logo.png' width={35}/>
             <div className="flex flex-col">
               <span className="text-2xl font-bold text-gradient">
                 ModularBusiness
