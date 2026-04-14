@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Sparkles, LogIn, ArrowRight } from 'lucide-react';
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
@@ -14,35 +21,66 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md z-50 border-b border-gray-100">
+    <nav className={`
+      fixed top-0 w-full z-50 transition-all duration-300
+      ${scrolled ? 'glass py-2' : 'bg-transparent py-4'}
+    `}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link to="/" className="text-2xl font-bold text-blue-600">
-            ModularBusiness
+          <Link to="/" className="flex items-center gap-2 group">
+            <img src='../../public/logo.png' width={35}/>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold text-gradient">
+                ModularBusiness
+              </span>
+              <span className="text-xs text-slate-400 -mt-1">
+                by J&G Systems
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
-            <button onClick={() => scrollToSection('features')} className="text-gray-600 hover:text-gray-900 transition">
+          <div className="hidden md:flex items-center space-x-6">
+            <button onClick={() => scrollToSection('features')} className="text-slate-300 hover:text-white transition">
               Características
             </button>
-            <button onClick={() => scrollToSection('modules')} className="text-gray-600 hover:text-gray-900 transition">
+            <button onClick={() => scrollToSection('modules')} className="text-slate-300 hover:text-white transition">
               Módulos
             </button>
-            <button onClick={() => scrollToSection('pricing')} className="text-gray-600 hover:text-gray-900 transition">
-              Precios
+            <button onClick={() => scrollToSection('testimonials')} className="text-slate-300 hover:text-white transition">
+              Testimonios
             </button>
-            <Link to="/login" className="text-gray-600 hover:text-gray-900 transition">
-              Iniciar Sesión
+            
+            {/* Botón Iniciar Sesión - Mejorado */}
+            <Link 
+              to="/login" 
+              className="flex items-center gap-1.5 text-slate-300 hover:text-white transition px-3 py-2 rounded-lg hover:bg-dark-800/50 group"
+            >
+              <LogIn size={18} className="group-hover:text-primary transition-colors" />
+              <span>Iniciar Sesión</span>
             </Link>
-            <Link to="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-              Comenzar Gratis
+            
+            {/* Botón Comenzar - Más llamativo */}
+            <Link 
+              to="/register" 
+              className="group relative bg-linear-to-r from-primary to-secondary text-white px-5 py-2.5 rounded-xl font-semibold hover:glow-effect transition-all duration-300 overflow-hidden"
+            >
+              {/* Efecto shimmer */}
+              <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+              
+              <span className="relative flex items-center gap-2">
+                Comenzar
+                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              </span>
             </Link>
           </div>
 
           {/* Mobile menu button */}
-          <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
+          <button 
+            className="md:hidden text-white p-2" 
+            onClick={() => setIsOpen(!isOpen)}
+          >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
@@ -50,22 +88,34 @@ export const Navbar = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden border-t bg-white">
-          <div className="px-4 py-3 space-y-3">
-            <button onClick={() => scrollToSection('features')} className="block w-full text-left text-gray-600 py-2">
+        <div className="md:hidden glass m-4 rounded-2xl animate-fade-in-down">
+          <div className="px-4 py-6 space-y-4">
+            <button onClick={() => scrollToSection('features')} className="block w-full text-left text-slate-300 py-2">
               Características
             </button>
-            <button onClick={() => scrollToSection('modules')} className="block w-full text-left text-gray-600 py-2">
+            <button onClick={() => scrollToSection('modules')} className="block w-full text-left text-slate-300 py-2">
               Módulos
             </button>
-            <button onClick={() => scrollToSection('pricing')} className="block w-full text-left text-gray-600 py-2">
-              Precios
+            <button onClick={() => scrollToSection('testimonials')} className="block w-full text-left text-slate-300 py-2">
+              Testimonios
             </button>
-            <Link to="/login" className="block text-gray-600 py-2">
+            
+            {/* Mobile - Iniciar Sesión */}
+            <Link 
+              to="/login" 
+              className="flex items-center gap-2 text-slate-300 py-2"
+            >
+              <LogIn size={18} />
               Iniciar Sesión
             </Link>
-            <Link to="/register" className="block w-full text-center bg-blue-600 text-white px-4 py-2 rounded-lg">
-              Comenzar Gratis
+            
+            {/* Mobile - Comenzar */}
+            <Link 
+              to="/register" 
+              className="flex items-center justify-center gap-2 w-full bg-linear-to-r from-primary to-secondary text-white px-4 py-3 rounded-lg font-medium"
+            >
+              Comenzar Ahora
+              <ArrowRight size={18} />
             </Link>
           </div>
         </div>

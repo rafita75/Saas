@@ -1,10 +1,182 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>ModularBusiness | Sistema de Gestión Modular para Negocios en Guatemala</title>
+    <meta name="title" content="ModularBusiness | Sistema de Gestión Modular para Negocios en Guatemala">
+    <meta name="description" content="Crea tu sistema de gestión personalizado. Elige módulos como Tienda en Línea, Inventario, POS, Reservas y Contabilidad. Paga solo por lo que usas. Hecho en Guatemala.">
+    <meta name="keywords" content="sistema gestión, tienda en línea Guatemala, punto de venta, inventario, contabilidad, facturación FEL, SaaS Guatemala, reservas, gestión negocios">
+    <meta name="author" content="J&H Systems">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Spanish">
+    <meta name="revisit-after" content="7 days">
+    <meta name="geo.region" content="GT">
+    <meta name="geo.placename" content="Ciudad de Guatemala">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://modularbusiness.com/">
+    <meta property="og:title" content="ModularBusiness | Sistema de Gestión Modular para Negocios">
+    <meta property="og:description" content="Crea tu sistema de gestión personalizado. Tienda en Línea, Inventario, POS, Reservas y más. Hecho en Guatemala.">
+    <meta property="og:image" content="https://modularbusiness.com/og-image.png">
+    <meta property="og:site_name" content="ModularBusiness">
+    <meta property="og:locale" content="es_GT">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://modularbusiness.com/">
+    <meta property="twitter:title" content="ModularBusiness | Sistema de Gestión Modular">
+    <meta property="twitter:description" content="Crea tu sistema de gestión personalizado. Elige los módulos que necesitas y paga solo por lo que usas.">
+    <meta property="twitter:image" content="https://modularbusiness.com/og-image.png">
+    <meta name="twitter:creator" content="@modularbusiness">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://modularbusiness.com/">
+    
+    <!-- Alternate languages (si aplica) -->
+    <link rel="alternate" hreflang="es" href="https://modularbusiness.com/">
+    <link rel="alternate" hreflang="x-default" href="https://modularbusiness.com/">
+    
+    <!-- Preconnect para mejorar rendimiento -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://api.supabase.co">
+    
+    <!-- Schema.org / JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "ModularBusiness",
+      "description": "Sistema de gestión empresarial modular para negocios en Guatemala",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "GTQ",
+        "lowPrice": "19",
+        "highPrice": "799",
+        "offerCount": "4",
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Plan Semilla",
+            "price": "79",
+            "priceCurrency": "GTQ"
+          },
+          {
+            "@type": "Offer",
+            "name": "Plan Impulso",
+            "price": "199",
+            "priceCurrency": "GTQ"
+          },
+          {
+            "@type": "Offer",
+            "name": "Plan Negocio",
+            "price": "399",
+            "priceCurrency": "GTQ"
+          },
+          {
+            "@type": "Offer",
+            "name": "Plan Imperio",
+            "price": "799",
+            "priceCurrency": "GTQ"
+          }
+        ]
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "ratingCount": "150"
+      },
+      "provider": {
+        "@type": "Organization",
+        "name": "J&H Systems",
+        "url": "https://modularbusiness.com",
+        "logo": "https://modularbusiness.com/logo.png",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Ciudad de Guatemala",
+          "addressCountry": "GT"
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+50237674506",
+          "contactType": "customer service",
+          "availableLanguage": "Spanish"
+        },
+        "sameAs": [
+          "https://facebook.com/modularbusiness",
+          "https://instagram.com/modularbusiness",
+          "https://twitter.com/modularbusiness",
+          "https://linkedin.com/company/modularbusiness"
+        ]
+      },
+      "featureList": [
+        "Tienda en Línea",
+        "Inventario",
+        "Punto de Venta",
+        "Reservas y Servicios",
+        "Contabilidad",
+        "Facturación FEL",
+        "Gestión de Empleados",
+        "Multi-sucursal"
+      ]
+    }
+    </script>
+    
+    <!-- FAQ Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "¿Qué es ModularBusiness?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ModularBusiness es un sistema de gestión empresarial modular hecho en Guatemala. Puedes elegir los módulos que necesitas (Tienda en Línea, Inventario, POS, Reservas, Contabilidad) y pagar solo por lo que usas."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Ofrecen facturación electrónica FEL?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí, nuestro módulo de Contabilidad incluye facturación electrónica FEL en los planes Pro y Empresa, completamente integrada con la SAT."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Puedo probar el sistema gratis?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ofrecemos una prueba de 3 días para que conozcas la plataforma. Requiere tarjeta de crédito, pero también aceptamos transferencia o efectivo."
+          }
+        }
+      ]
+    }
+    </script>
+    
+    <!-- Product Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": "ModularBusiness",
+      "description": "Sistema SaaS modular para gestión de negocios",
+      "brand": {
+        "@type": "Brand",
+        "name": "J&H Systems"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

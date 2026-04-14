@@ -1,65 +1,73 @@
-import { Zap, Palette, Shield, Rocket, Users, Globe } from 'lucide-react';
+import { GlowCard } from '../../../shared/components/GlowCard';
+import { SectionTitle } from '../../../shared/components/SectionTitle';
+import { Zap, Palette, Shield, Rocket, Users, Globe, Smartphone, Cloud } from 'lucide-react';
 
 const features = [
   {
-    icon: <Zap className="text-blue-600" size={28} />,
-    title: 'Fácil de Usar',
-    description: 'Interfaz intuitiva que no requiere conocimientos técnicos. Configura todo en minutos.'
+    icon: <Zap className="text-primary" size={28} />,
+    title: 'Rápido y Fluido',
+    description: 'Interfaz optimizada que carga al instante. Navegación suave sin demoras.'
   },
   {
-    icon: <Palette className="text-blue-600" size={28} />,
+    icon: <Palette className="text-secondary" size={28} />,
     title: '100% Personalizable',
-    description: 'Adapta colores, fuentes y layout a tu marca. Tu negocio, tu estilo.'
+    description: 'Colores, fuentes y layout adaptables a tu marca. Tu estilo, tu negocio.'
   },
   {
-    icon: <Shield className="text-blue-600" size={28} />,
-    title: 'Seguridad Garantizada',
-    description: 'Tus datos protegidos con encriptación de nivel bancario y backups diarios.'
+    icon: <Shield className="text-accent" size={28} />,
+    title: 'Seguridad Bancaria',
+    description: 'Encriptación de grado militar. Tus datos siempre protegidos con backups diarios.'
   },
   {
-    icon: <Rocket className="text-blue-600" size={28} />,
-    title: 'Escalable',
-    description: 'Agrega módulos según crece tu negocio. Paga solo por lo que necesitas.'
+    icon: <Rocket className="text-primary" size={28} />,
+    title: 'Escala sin Límites',
+    description: 'Agrega módulos cuando crezcas. Paga solo por lo que realmente necesitas.'
   },
   {
-    icon: <Users className="text-blue-600" size={28} />,
+    icon: <Users className="text-secondary" size={28} />,
     title: 'Multi-usuario',
-    description: 'Invita a tu equipo con roles y permisos personalizados por empleado.'
+    description: 'Invita a tu equipo con roles y permisos personalizados para cada empleado.'
   },
   {
-    icon: <Globe className="text-blue-600" size={28} />,
+    icon: <Globe className="text-accent" size={28} />,
     title: 'Dominio Propio',
-    description: 'Usa tu propio dominio o un subdominio gratuito. Tú decides.'
+    description: 'Usa tu propio dominio o subdominio gratuito. Tú decides cómo aparecer.'
+  },
+  {
+    icon: <Smartphone className="text-primary" size={28} />,
+    title: '100% Responsive',
+    description: 'Gestiona tu negocio desde cualquier dispositivo. Móvil, tablet o desktop.'
+  },
+  {
+    icon: <Cloud className="text-secondary" size={28} />,
+    title: 'Todo en la Nube',
+    description: 'Accede desde donde quieras. Sin instalaciones ni servidores costosos.'
   }
 ];
 
 export const Features = () => {
   return (
-    <section id="features" className="py-20 px-4 bg-white">
+    <section id="features" className="py-20 px-4 relative">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Todo lo que necesitas en un solo lugar
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            ModularBusiness te ofrece todas las herramientas para gestionar tu negocio
-            de forma eficiente y profesional.
-          </p>
-        </div>
+        <SectionTitle 
+          subtitle="ModularBusiness te ofrece todas las herramientas para gestionar tu negocio de forma eficiente y profesional."
+        >
+          Todo lo que necesitas en un solo lugar
+        </SectionTitle>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (
-            <div key={index} className="p-6 bg-gray-50 rounded-xl hover:shadow-lg transition">
-              <div className="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+            <GlowCard key={index} className="animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
+              <div className="w-14 h-14 rounded-xl bg-linear-to-br from-primary/20 to-secondary/20 flex items-center justify-center mb-4">
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold text-white mb-2">
                 {feature.title}
               </h3>
-              <p className="text-gray-600">
+              <p className="text-slate-400">
                 {feature.description}
               </p>
-            </div>
+            </GlowCard>
           ))}
         </div>
       </div>

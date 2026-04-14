@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { supabaseAnon } from './config/supabase.js';
+import { supabaseAnon } from './src/core/database/supabase.js';
 
 dotenv.config();
 
