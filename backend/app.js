@@ -2,8 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { connectDB } from './core/database/mongodb.js';
-import authRoutes from './modules/auth/auth.routes.js';
+import { connectDB } from './src/core/database/mongodb.js';
+import authRoutes from './src/modules/auth/auth.routes.js';
 
 dotenv.config();
 
