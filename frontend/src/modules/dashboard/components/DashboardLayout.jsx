@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import { clearAuthCookies } from '../../../lib/cookies';
 import {
   LayoutDashboard,
@@ -16,10 +16,8 @@ import {
   Calendar,
   Calculator,
 } from "lucide-react";
-import api from "../../../lib/api";
 
 const DashboardLayout = () => {
-  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -32,10 +30,7 @@ const DashboardLayout = () => {
     clearAuthCookies();
     
     // Limpiar localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('tenant_slug');
-    localStorage.removeItem('tenant_name');
-    localStorage.removeItem('user_email');
+    localStorage.clear();
     
     // Redirigir a login
     window.location.href = 'https://jgsystemsgt.com/login';
