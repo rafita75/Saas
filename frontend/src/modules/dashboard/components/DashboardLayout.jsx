@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, Outlet } from "react-router-dom";
+import { clearAuthCookies } from '../../../lib/cookies';
 import {
   LayoutDashboard,
   Package,
@@ -27,11 +28,17 @@ const DashboardLayout = () => {
   const tenantSlug = localStorage.getItem("tenant_slug") || "";
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("tenant_slug");
-    localStorage.removeItem("tenant_name");
-    localStorage.removeItem("user_email");
-    window.location.href = "https://jgsystemsgt.com/login";
+    // Limpiar cookies
+    clearAuthCookies();
+    
+    // Limpiar localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('tenant_slug');
+    localStorage.removeItem('tenant_name');
+    localStorage.removeItem('user_email');
+    
+    // Redirigir a login
+    window.location.href = 'https://jgsystemsgt.com/login';
   };
 
   const menuItems = [
