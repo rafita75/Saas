@@ -1,49 +1,27 @@
-import { useEffect, useState } from 'react';
 import { getCookie } from '../../../lib/cookies';
-import api from '../../../lib/api';
 
 export const ProtectedRoute = ({ children }) => {
-  const [loading, setLoading] = useState(true);
-  const [valid, setValid] = useState(false);
-
-  useEffect(() => {
-    const verifyToken = async () => {
-      const token = getCookie('token') || localStorage.getItem('token');
-      
-      if (!token) {
-        window.location.href = 'https://jgsystemsgt.com/login';
-        return;
-      }
-
-      try {
-        // Verificar token con el backend
-        await api.get('/auth/me', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setValid(true);
-      } catch (error) {
-        // Token inválido o expirado
-        localStorage.clear();
-        window.location.href = 'https://jgsystemsgt.com/login';
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    verifyToken();
-  }, []);
-
-  if (loading) {
+  const token = getCookie('token') || localStorage.getItem('token');
+  
+  if (!token) {
+    // Mostrar mensaje de acceso denegado con enlace a login
     return (
-      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
-        <div className="text-slate-400">Verificando sesión...</div>
+      <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4">
+        <div className="glass rounded-2xl p-8 border border-red-500/30 text-center max-w-md">
+          <h2 className="text-2xl font-bold text-white mb-4">🔒 Acceso Denegado</h2>
+          <p className="text-slate-400 mb-6">
+            Debes iniciar sesión para acceder al panel de administración.
+          </p>
+          <a 
+            href="https://jgsystemsgt.com/login"
+            className="inline-block bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-medium"
+          >
+            Ir a Iniciar Sesión
+          </a>
+        </div>
       </div>
     );
   }
-
-  if (!valid) {
-    return null;
-  }
-
+  
   return children;
 };
