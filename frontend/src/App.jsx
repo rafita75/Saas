@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Home } from './modules/landing/pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import { Home } from './core/landing/pages/Home';
+import Login from './core/auth/pages/Login';
+import Register from './core/auth/pages/Register';
 
 function App() {
   const hostname = window.location.hostname;
