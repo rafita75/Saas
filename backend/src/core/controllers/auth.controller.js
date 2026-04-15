@@ -138,7 +138,7 @@ export const login = async (req, res) => {
 
     const tenantUser = await TenantUser.findOne({ userId: user._id }).populate('tenantId');
     
-    if (!tenantUser) {
+    if (!tenantUser || !tenantUser.tenantId) {
       return res.status(404).json({
         success: false,
         error: 'No se encontró un negocio asociado a tu cuenta',
