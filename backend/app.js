@@ -11,6 +11,14 @@ dotenv.config();
 
 const app = express();
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://jgsystemsgt.com',
+  'https://www.jgsystemsgt.com',
+  'https://admin.jgsystemsgt.com',
+];
+
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB conectado'))
@@ -19,13 +27,20 @@ mongoose.connect(process.env.MONGODB_URI)
 // Middlewares globales
 app.use(helmet());
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://jgsystemsgt.com',
-    'https://www.jgsystemsgt.com',
-    'https://admin.jgsystemsgt.com',
-    'https://*.jgsystemsgt.com',
-  ],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    
+    // Permitir subdominios de jgsystemsgt.com
+    if (origin.endsWith('.jgsystemsgt.com') || origin === 'https://jgsystemsgt.com') {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 app.use(express.json());

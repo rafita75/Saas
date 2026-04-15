@@ -5,39 +5,39 @@ import { Tenant } from '../models/Tenant.js';
  */
 export const tenantResolver = async (req, res, next) => {
   try {
-    // 1. Intentar obtener slug del subdominio
-    const hostname = req.headers.host || '';
-    const parts = hostname.split('.');
-    
     let slug = null;
     
-    // Si es subdominio (ej: mi-tienda.admin.localhost)
-    if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'admin') {
-      slug = parts[0];
+    // ✅ 1. Prioridad: params de la URL
+    if (req.params.slug) {
+      slug = req.params.slug;
     }
     
-    // 2. Si no hay subdominio, buscar en header personalizado
+    // 2. Subdominio
+    if (!slug) {
+      const hostname = req.headers.host || '';
+      const parts = hostname.split('.');
+      if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'admin') {
+        slug = parts[0];
+      }
+    }
+    
+    // 3. Header
     if (!slug) {
       slug = req.headers['x-tenant-slug'];
     }
     
-    // 3. Si aún no hay slug, buscar en query param
+    // 4. Query
     if (!slug) {
       slug = req.query.tenant;
     }
     
-    // 4. Si encontramos slug, buscar el tenant
     if (slug) {
       const tenant = await Tenant.findOne({ slug, status: 'active' });
-      
-      if (tenant) {
-        req.tenant = tenant;
-      }
+      if (tenant) req.tenant = tenant;
     }
     
     next();
   } catch (error) {
-    console.error('Error en tenantResolver:', error);
     next();
   }
 };
@@ -54,4 +54,70 @@ export const requireTenant = (req, res, next) => {
   }
   
   next();
+};
+
+export const updateMemberRole = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    const member = await TenantUser.findOne({
+      tenantId: req.tenant._id,
+      userId,
+    });
+
+    // ✅ Validación
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        error: 'Miembro no encontrado',
+      });
+    }
+
+    if (member.role === 'owner') {
+      return res.status(403).json({
+        success: false,
+        error: 'No se puede cambiar el rol del dueño',
+      });
+    }
+
+    member.role = role;
+    await member.save();
+
+    res.json({ success: true, message: 'Rol actualizado' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const removeMember = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const member = await TenantUser.findOne({
+      tenantId: req.tenant._id,
+      userId,
+    });
+
+    // ✅ Validación
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        error: 'Miembro no encontrado',
+      });
+    }
+
+    if (member.role === 'owner') {
+      return res.status(403).json({
+        success: false,
+        error: 'No se puede eliminar al dueño',
+      });
+    }
+
+    await TenantUser.deleteOne({ _id: member._id });
+
+    res.json({ success: true, message: 'Miembro eliminado' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 };

@@ -40,35 +40,43 @@ export const updateProfile = asyncHandler(async (req, res) => {
  * Cambiar contraseña
  * POST /api/users/change-password
  */
-export const changePassword = asyncHandler(async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
 
-  // Verificar contraseña actual
-  const user = await User.findById(req.user._id);
-  const isPasswordValid = await user.comparePassword(currentPassword);
+    const user = await User.findById(req.user._id);
+    const isPasswordValid = await user.comparePassword(currentPassword);
 
-  if (!isPasswordValid) {
-    return res.status(401).json({
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        error: 'La contraseña actual es incorrecta',
+      });
+    }
+
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        error: 'Contraseña débil',
+        details: passwordValidation.errors,
+      });
+    }
+
+    // ✅ Hashear manualmente
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Contraseña actualizada correctamente',
+    });
+  } catch (error) {
+    console.error('Error en changePassword:', error);
+    res.status(500).json({
       success: false,
-      error: 'La contraseña actual es incorrecta',
+      error: 'Error al cambiar la contraseña',
     });
   }
-
-  // Validar fortaleza de nueva contraseña
-  const passwordValidation = validatePasswordStrength(newPassword);
-  if (!passwordValidation.isValid) {
-    return res.status(400).json({
-      success: false,
-      error: 'Contraseña débil',
-      details: passwordValidation.errors,
-    });
-  }
-
-  user.password = newPassword;
-  await user.save();
-
-  res.json({
-    success: true,
-    message: 'Contraseña actualizada correctamente',
-  });
-});
+};

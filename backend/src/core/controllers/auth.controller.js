@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 import { Tenant } from '../models/Tenant.js';
@@ -8,11 +9,15 @@ import { generateUniqueSlug } from '../utils/slug.js';
 import { validatePasswordStrength } from '../utils/password.js';
 
 export const register = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { fullName, businessName, email, password } = req.body;
 
     const passwordValidation = validatePasswordStrength(password);
     if (!passwordValidation.isValid) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         error: 'Contraseña débil',
@@ -20,8 +25,9 @@ export const register = async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email }).session(session);
     if (existingUser) {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         error: 'Este email ya está registrado',
@@ -33,23 +39,23 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const user = await User.create({
+    const [user] = await User.create([{
       fullName,
       email,
       password: hashedPassword,
-    });
+    }], { session });
 
-    const tenant = await Tenant.create({
+    const [tenant] = await Tenant.create([{
       name: businessName,
       slug,
       ownerId: user._id,
-    });
+    }], { session });
 
-    await TenantUser.create({
+    await TenantUser.create([{
       tenantId: tenant._id,
       userId: user._id,
       role: 'owner',
-    });
+    }], { session });
 
     const token = generateToken({
       userId: user._id,
@@ -60,35 +66,32 @@ export const register = async (req, res) => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    await Session.create({
+    await Session.create([{
       userId: user._id,
       tenantId: tenant._id,
       token,
       ip: req.ip,
       userAgent: req.headers['user-agent'],
       expiresAt,
-    });
+    }], { session });
+
+    await session.commitTransaction();
 
     res.status(201).json({
       success: true,
       token,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-      },
-      tenant: {
-        id: tenant._id,
-        name: tenant.name,
-        slug: tenant.slug,
-      },
+      user: { id: user._id, fullName: user.fullName, email: user.email },
+      tenant: { id: tenant._id, name: tenant.name, slug: tenant.slug },
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error('Error en registro:', error);
     res.status(500).json({
       success: false,
       error: 'Error al crear la cuenta',
     });
+  } finally {
+    session.endSession();
   }
 };
 
