@@ -18,13 +18,12 @@ function App() {
   const isAdmin = hostname.startsWith('admin.');
 
   if (isAdmin) {
-    const tenantStr = getCookie('tenant') || localStorage.getItem('tenant');
-    const tenant = JSON.parse(tenantStr || '{}');
+    const tenantStr = getSessionData('tenant') || '{}';
+    const tenant = JSON.parse(tenantStr);
     const slug = tenant.slug || '';
-    
+
     // ✅ Si no hay slug, redirigir al login (sesión corrupta)
     if (!slug) {
-      localStorage.clear();
       return <ExternalRedirect to="https://jgsystemsgt.com/login" />;
     }
     

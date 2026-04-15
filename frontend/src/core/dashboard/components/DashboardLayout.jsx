@@ -15,13 +15,16 @@ import {
   Calculator,
 } from 'lucide-react';
 import api from '../../../lib/api';
+import { clearAuthCookies, getSessionData } from '../../../lib/cookies';
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const tenant = JSON.parse(localStorage.getItem('tenant') || '{}');
+  const userStr = getSessionData('user') || '{}';
+  const tenantStr = getSessionData('tenant') || '{}';
+  const user = JSON.parse(userStr);
+  const tenant = JSON.parse(tenantStr);
 
   const handleLogout = async () => {
     try {
@@ -29,6 +32,7 @@ const DashboardLayout = () => {
     } catch (error) {
       console.error('Error en logout:', error);
     } finally {
+      // ✅ Limpiar cookies y localStorage
       clearAuthCookies();
       localStorage.clear();
       window.location.href = 'https://jgsystemsgt.com';

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, Check, Layout, Users, ShoppingBag, Package, Store, Calendar, Calculator, UserCog, Building2, Shield, Lock } from 'lucide-react';
 import { GlowCard } from '../../../shared/components/GlowCard';
 import api from '../../../lib/api';
+import { getSessionData } from '../../../lib/cookies';
 
 const AVAILABLE_MODULES = [
   { id: 'landing', name: 'Landing Page', description: 'Crea páginas profesionales con constructor drag & drop', icon: Layout, price: 39, color: 'from-blue-500/20 to-cyan-500/20', iconColor: 'text-cyan-400' },
@@ -20,10 +21,10 @@ export default function SelectModules() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const tenantStr = getCookie('tenant') || localStorage.getItem('tenant');
-  const tenant = JSON.parse(tenantStr || '{}');
-  const userStr = getCookie('user') || localStorage.getItem('user');
-  const user = JSON.parse(userStr || '{}');
+  const tenantStr = getSessionData('tenant') || '{}';
+  const userStr = getSessionData('user') || '{}';
+  const tenant = JSON.parse(tenantStr);
+  const user = JSON.parse(userStr);
 
   const toggleModule = (moduleId) => {
     const module = AVAILABLE_MODULES.find(m => m.id === moduleId);
