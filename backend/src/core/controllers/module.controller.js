@@ -285,10 +285,11 @@ export const changePlan = asyncHandler(async (req, res) => {
 export const cancelSubscription = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
+  // ✅ Obtener la suscripción con el módulo populado
   const tenantModule = await TenantModule.findOne({
     _id: id,
     tenantId: req.tenant._id,
-  });
+  }).populate('moduleId', 'name slug requires');
 
   if (!tenantModule) {
     return res.status(404).json({
@@ -297,13 +298,17 @@ export const cancelSubscription = asyncHandler(async (req, res) => {
     });
   }
 
-  // Verificar que no haya módulos que dependan de este
+  const currentModule = tenantModule.moduleId;
+  const currentModuleSlug = currentModule.slug;
+
+  // ✅ Buscar módulos que REQUIERAN este módulo (por slug)
   const dependentModules = await Module.find({
-    requires: tenantModule.moduleId.toString(),
+    requires: currentModuleSlug,  // ← Ahora busca por slug, no por ObjectId
     isActive: true,
   });
 
   if (dependentModules.length > 0) {
+    // Verificar si el tenant tiene contratados esos módulos dependientes
     const dependentSubscriptions = await TenantModule.find({
       tenantId: req.tenant._id,
       moduleId: { $in: dependentModules.map(m => m._id) },
@@ -311,7 +316,11 @@ export const cancelSubscription = asyncHandler(async (req, res) => {
     });
 
     if (dependentSubscriptions.length > 0) {
-      const dependentNames = dependentModules.map(m => m.name).join(', ');
+      const dependentNames = dependentModules
+        .filter(m => dependentSubscriptions.some(ds => ds.moduleId.toString() === m._id.toString()))
+        .map(m => m.name)
+        .join(', ');
+        
       return res.status(400).json({
         success: false,
         error: `No puedes cancelar este módulo porque los siguientes módulos lo requieren: ${dependentNames}`,

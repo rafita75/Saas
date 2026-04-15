@@ -117,7 +117,9 @@ export const optionalAuthMiddleware = async (req, res, next) => {
     });
 
     req.user = user;
-    req.tenant = tenant;
+    // ✅ Usar authenticatedTenant para consistencia
+    req.authenticatedTenant = tenant;
+    req.tenant = tenant;  // Para compatibilidad
     req.tenantUser = tenantUser;
     req.session = session;
     req.token = token;

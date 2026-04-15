@@ -14,20 +14,20 @@ const sessionSchema = new mongoose.Schema({
   token: {
     type: String,
     required: true,
-    unique: true,
+    unique: true,  // ✅ Solo esto es suficiente para el índice único
   },
   ip: String,
   userAgent: String,
   expiresAt: {
     type: Date,
     required: true,
-    index: { expires: 0 }, // TTL - se elimina automáticamente al expirar
+    index: { expires: 0 },  // ✅ TTL index - se elimina automáticamente
   },
 }, {
   timestamps: true,
 });
 
+// ✅ Solo índices adicionales necesarios
 sessionSchema.index({ userId: 1 });
-sessionSchema.index({ token: 1 });
 
 export const Session = mongoose.model('Session', sessionSchema);

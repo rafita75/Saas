@@ -13,9 +13,18 @@ export const register = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { fullName, businessName, email, password } = req.body;
+    let { fullName, businessName, email, password } = req.body;
     
+    // ✅ Corregido: usar let en lugar de const
     email = email?.trim().toLowerCase();
+    
+    if (!email || !password) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        error: 'Email y contraseña son requeridos',
+      });
+    }
 
     const passwordValidation = validatePasswordStrength(password);
     if (!passwordValidation.isValid) {
@@ -99,9 +108,17 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
     
+    // ✅ Corregido: usar let en lugar de const
     email = email?.trim().toLowerCase();
+    
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email y contraseña son requeridos',
+      });
+    }
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -200,9 +217,19 @@ export const logout = async (req, res) => {
 
 export const logoutAll = async (req, res) => {
   try {
+    // ✅ Corregido: usar authenticatedTenant o tenant
+    const tenantId = req.authenticatedTenant?._id || req.tenant?._id;
+    
+    if (!tenantId) {
+      return res.status(400).json({
+        success: false,
+        error: 'No se pudo determinar el negocio',
+      });
+    }
+
     await Session.deleteMany({
       userId: req.user._id,
-      tenantId: req.tenant._id,
+      tenantId: tenantId,
     });
 
     res.json({
@@ -220,12 +247,15 @@ export const logoutAll = async (req, res) => {
 
 export const me = async (req, res) => {
   try {
+    // ✅ Corregido: usar authenticatedTenant o tenant
+    const tenant = req.authenticatedTenant || req.tenant;
+    
     res.json({
       success: true,
       user: req.user,
-      tenant: req.tenant,
-      role: req.tenantUser.role,
-      permissions: req.tenantUser.permissions,
+      tenant: tenant,
+      role: req.tenantUser?.role,
+      permissions: req.tenantUser?.permissions || [],
     });
   } catch (error) {
     console.error('Error en me:', error);

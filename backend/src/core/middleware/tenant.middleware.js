@@ -1,7 +1,8 @@
 import { Tenant } from '../models/Tenant.js';
 
 /**
- * Middleware para resolver el tenant por subdominio o header
+ * Middleware para resolver el tenant por subdominio, header o params
+ * NO sobrescribe req.tenant - usa req.requestedTenant
  */
 export const tenantResolver = async (req, res, next) => {
   try {
@@ -45,85 +46,9 @@ export const tenantResolver = async (req, res, next) => {
 };
 
 /**
- * Middleware para exigir que haya un tenant resuelto
+ * Valida que el tenant solicitado coincida con el autenticado
+ * y establece req.tenant para compatibilidad
  */
-export const requireTenant = (req, res, next) => {
-  if (!req.tenant) {
-    return res.status(400).json({
-      success: false,
-      error: 'No se pudo determinar el negocio. Especifica un subdominio o tenant válido.',
-    });
-  }
-  
-  next();
-};
-
-export const updateMemberRole = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { role } = req.body;
-
-    const member = await TenantUser.findOne({
-      tenantId: req.tenant._id,
-      userId,
-    });
-
-    // ✅ Validación
-    if (!member) {
-      return res.status(404).json({
-        success: false,
-        error: 'Miembro no encontrado',
-      });
-    }
-
-    if (member.role === 'owner') {
-      return res.status(403).json({
-        success: false,
-        error: 'No se puede cambiar el rol del dueño',
-      });
-    }
-
-    member.role = role;
-    await member.save();
-
-    res.json({ success: true, message: 'Rol actualizado' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
-
-export const removeMember = async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    const member = await TenantUser.findOne({
-      tenantId: req.tenant._id,
-      userId,
-    });
-
-    // ✅ Validación
-    if (!member) {
-      return res.status(404).json({
-        success: false,
-        error: 'Miembro no encontrado',
-      });
-    }
-
-    if (member.role === 'owner') {
-      return res.status(403).json({
-        success: false,
-        error: 'No se puede eliminar al dueño',
-      });
-    }
-
-    await TenantUser.deleteOne({ _id: member._id });
-
-    res.json({ success: true, message: 'Miembro eliminado' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
-
 export const validateTenantAccess = (req, res, next) => {
   // Si hay un tenant solicitado, debe coincidir con el autenticado
   if (req.requestedTenant && req.authenticatedTenant) {
@@ -142,6 +67,21 @@ export const validateTenantAccess = (req, res, next) => {
     return res.status(400).json({
       success: false,
       error: 'No se pudo determinar el negocio',
+    });
+  }
+  
+  next();
+};
+
+/**
+ * Middleware para exigir que haya un tenant resuelto
+ * (usar después de validateTenantAccess)
+ */
+export const requireTenant = (req, res, next) => {
+  if (!req.tenant) {
+    return res.status(400).json({
+      success: false,
+      error: 'No se pudo determinar el negocio. Especifica un subdominio o tenant válido.',
     });
   }
   
