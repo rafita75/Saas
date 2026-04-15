@@ -6,7 +6,7 @@ import DashboardLayout from './core/dashboard/components/DashboardLayout';
 import DashboardHome from './core/dashboard/pages/DashboardHome';
 import SelectModules from './core/onboarding/pages/SelectModules';
 import { ProtectedRoute } from './core/auth/components/ProtectedRoute';
-import { getSessionData } from './lib/cookies';
+import { parseSessionJSON } from './lib/cookies';
 
 const ExternalRedirect = ({ to }) => {
   window.location.href = to;
@@ -18,8 +18,7 @@ function App() {
   const isAdmin = hostname.startsWith('admin.');
 
   if (isAdmin) {
-    const tenantStr = getSessionData('tenant') || '{}';
-    const tenant = JSON.parse(tenantStr);
+    const tenant = parseSessionJSON('tenant', {});
     const slug = tenant.slug || '';
 
     // ✅ Si no hay slug, redirigir al login (sesión corrupta)

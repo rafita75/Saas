@@ -50,3 +50,18 @@ export const getSessionData = (key) => {
   if (cookieValue) return cookieValue;
   return localStorage.getItem(key);
 };
+
+// Parsear JSON de sesión de forma segura (evita romper la app si hay datos corruptos)
+export const parseSessionJSON = (key, fallback = {}) => {
+  const rawValue = getSessionData(key);
+
+  if (!rawValue) {
+    return fallback;
+  }
+
+  try {
+    return JSON.parse(rawValue);
+  } catch (error) {
+    return fallback;
+  }
+};

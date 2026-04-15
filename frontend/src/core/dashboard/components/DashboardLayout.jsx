@@ -15,15 +15,13 @@ import {
   Calculator,
 } from 'lucide-react';
 import api from '../../../lib/api';
-import { clearAuthCookies, getSessionData } from '../../../lib/cookies';
+import { clearAuthCookies, parseSessionJSON } from '../../../lib/cookies';
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
-  const userStr = getSessionData('user') || '{}';
-  const tenantStr = getSessionData('tenant') || '{}';
-  const user = JSON.parse(userStr);
-  const tenant = JSON.parse(tenantStr);
+  const user = parseSessionJSON('user', {});
+  const tenant = parseSessionJSON('tenant', {});
 
   const handleLogout = async () => {
     try {
