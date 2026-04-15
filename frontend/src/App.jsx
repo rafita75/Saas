@@ -7,7 +7,6 @@ import DashboardHome from './core/dashboard/pages/DashboardHome';
 import SelectModules from './core/onboarding/pages/SelectModules';
 import { ProtectedRoute } from './core/auth/components/ProtectedRoute';
 
-// ✅ Componente para redirección externa (SIN Navigate)
 const ExternalRedirect = ({ to }) => {
   window.location.href = to;
   return null;
@@ -19,15 +18,18 @@ function App() {
 
   if (isAdmin) {
     const tenant = JSON.parse(localStorage.getItem('tenant') || '{}');
+    const slug = tenant.slug || '';
     
     return (
       <Routes>
-        <Route path="/onboarding" element={
+        {/* Onboarding - con slug en la URL */}
+        <Route path="/:slug/onboarding" element={
           <ProtectedRoute>
             <SelectModules />
           </ProtectedRoute>
         } />
         
+        {/* Dashboard - con slug en la URL */}
         <Route path="/:slug/*" element={
           <ProtectedRoute>
             <DashboardLayout />
@@ -37,9 +39,9 @@ function App() {
           <Route path="dashboard" element={<DashboardHome />} />
         </Route>
         
-        {/* ✅ Usar ExternalRedirect en lugar de Navigate */}
-        <Route path="/login" element={<ExternalRedirect to="https://jgsystemsgt.com/login" />} />
-        <Route path="*" element={<ExternalRedirect to={`https://admin.jgsystemsgt.com/${tenant.slug || ''}`} />} />
+        {/* Redirecciones */}
+        <Route path="/" element={<ExternalRedirect to={`https://admin.jgsystemsgt.com/${slug}/dashboard`} />} />
+        <Route path="*" element={<ExternalRedirect to="https://jgsystemsgt.com/login" />} />
       </Routes>
     );
   }
