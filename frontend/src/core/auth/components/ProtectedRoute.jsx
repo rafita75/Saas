@@ -1,11 +1,17 @@
-import { Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 export const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   const user = localStorage.getItem('user');
   
+  useEffect(() => {
+    if (!token || !user) {
+      window.location.href = 'https://jgsystemsgt.com/login';
+    }
+  }, [token, user]);
+  
   if (!token || !user) {
-    return <Navigate to="https://jgsystemsgt.com/login" replace />;
+    return null; // No renderizar nada mientras redirige
   }
   
   return children;
