@@ -18,14 +18,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor para manejar errores
+// Interceptor para manejar errores de autenticación
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
-      localStorage.removeItem('tenant_slug');
-      localStorage.removeItem('tenant_name');
+      localStorage.removeItem('user');
+      localStorage.removeItem('tenant');
       window.location.href = 'https://jgsystemsgt.com/login';
     }
     return Promise.reject(error);
