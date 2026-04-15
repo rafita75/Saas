@@ -29,6 +29,7 @@ const DashboardLayout = () => {
     } catch (error) {
       console.error('Error en logout:', error);
     } finally {
+      clearAuthCookies();
       localStorage.clear();
       window.location.href = 'https://jgsystemsgt.com';
     }

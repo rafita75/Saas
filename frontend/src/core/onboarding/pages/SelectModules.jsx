@@ -20,8 +20,10 @@ export default function SelectModules() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const tenant = JSON.parse(localStorage.getItem('tenant') || '{}');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const tenantStr = getCookie('tenant') || localStorage.getItem('tenant');
+  const tenant = JSON.parse(tenantStr || '{}');
+  const userStr = getCookie('user') || localStorage.getItem('user');
+  const user = JSON.parse(userStr || '{}');
 
   const toggleModule = (moduleId) => {
     const module = AVAILABLE_MODULES.find(m => m.id === moduleId);

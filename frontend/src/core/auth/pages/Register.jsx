@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, User, Building2, Mail, Lock, ArrowRight, Rocket } from 'lucide-react';
 import api from '../../../lib/api';
+import { setCookie } from '../../../lib/cookies';
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -26,6 +27,10 @@ export default function Register() {
       const response = await api.post('/auth/register', form);
       
       const { token, user, tenant } = response.data;
+
+      setCookie('token', token);
+      setCookie('user', JSON.stringify(user));
+      setCookie('tenant', JSON.stringify(tenant));
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));

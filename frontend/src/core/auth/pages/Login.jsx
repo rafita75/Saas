@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Mail, Lock, ArrowRight, LogIn } from 'lucide-react';
 import api from '../../../lib/api';
+import { setCookie } from '../../../lib/cookies';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -18,6 +19,10 @@ export default function Login() {
       const response = await api.post('/auth/login', { email, password });
       
       const { token, user, tenant } = response.data;
+
+      setCookie('token', token);
+      setCookie('user', JSON.stringify(user));
+      setCookie('tenant', JSON.stringify(tenant));
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
