@@ -10,7 +10,6 @@ import { TenantUser } from '../models/TenantUser.js';
  */
 export const authMiddleware = async (req, res, next) => {
   try {
-    // 1. Extraer token del header
     const token = extractTokenFromHeader(req.headers.authorization);
     
     if (!token) {
@@ -20,7 +19,6 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // 2. Verificar token JWT
     const decoded = verifyToken(token);
     if (!decoded) {
       return res.status(401).json({ 
@@ -29,7 +27,6 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // 3. Verificar que la sesión existe en base de datos
     const session = await Session.findOne({ token });
     if (!session) {
       return res.status(401).json({ 
@@ -38,7 +35,6 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // 4. Verificar que el usuario existe y está activo
     const user = await User.findById(decoded.userId).select('-password');
     if (!user) {
       return res.status(401).json({ 
@@ -47,7 +43,6 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // 5. Verificar que el tenant existe y está activo
     const tenant = await Tenant.findById(decoded.tenantId);
     if (!tenant) {
       return res.status(404).json({ 
@@ -63,7 +58,6 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // 6. Verificar que el usuario pertenece al tenant
     const tenantUser = await TenantUser.findOne({
       tenantId: tenant._id,
       userId: user._id,
@@ -76,17 +70,17 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // 7. Adjuntar datos al request para uso posterior
     req.user = user;
     req.tenant = tenant;
     req.tenantUser = tenantUser;
     req.session = session;
     req.token = token;
 
+    // ✅ Solo llamamos a next() si todo está bien
     next();
   } catch (error) {
     console.error('Error en authMiddleware:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false, 
       error: 'Error al verificar autenticación' 
     });
