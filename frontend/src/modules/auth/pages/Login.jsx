@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import api from '../../../lib/api';
+import { getCookie, setCookie } from '../../../lib/cookies';
 import { Mail, Sparkles, ArrowRight, LogIn, Lock } from 'lucide-react';
 
-// ✅ Input simple temporal (hasta que arreglemos el componente compartido)
+// Input simple temporal
 const Input = ({ label, type = 'text', icon: Icon, placeholder, error, ...props }) => (
   <div>
     {label && <label className="block text-sm font-medium text-slate-300 mb-1">{label}</label>}
@@ -31,6 +32,7 @@ const loginSchema = z.object({
 export const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [checkingSession, setCheckingSession] = useState(true);
 
   const {
     register,
@@ -40,28 +42,42 @@ export const Login = () => {
     resolver: zodResolver(loginSchema),
   });
 
+  // ✅ Verificar si ya tiene sesión activa
+  useEffect(() => {
+    const token = getCookie('token') || localStorage.getItem('token');
+    const slug = getCookie('tenant_slug') || localStorage.getItem('tenant_slug');
+    
+    if (token && slug) {
+      window.location.href = `https://admin.jgsystemsgt.com/${slug}/dashboard`;
+      return;
+    }
+    
+    setCheckingSession(false);
+  }, []);
+
   const onSubmit = async (data) => {
     setLoading(true);
     setError('');
-  
+
     try {
       const response = await api.post('/auth/login', data);
       
-      const token = response.data.token;
-      const slug = response.data.tenant.slug;
-      const name = response.data.tenant.name;
+      const { token, tenant } = response.data;
       
-      // ✅ Guardar en cookie accesible desde subdominios
-      document.cookie = `token=${token}; domain=.jgsystemsgt.com; path=/; secure; samesite=lax`;
-      document.cookie = `tenant_slug=${slug}; domain=.jgsystemsgt.com; path=/; secure; samesite=lax`;
-      document.cookie = `tenant_name=${name}; domain=.jgsystemsgt.com; path=/; secure; samesite=lax`;
+      // ✅ Guardar en cookies (accesible desde subdominios)
+      setCookie('token', token, 7);
+      setCookie('tenant_slug', tenant.slug, 7);
+      setCookie('tenant_name', tenant.name, 7);
+      setCookie('user_email', data.email, 7);
       
-      // También en localStorage como respaldo
+      // También en localStorage (respaldo)
       localStorage.setItem('token', token);
-      localStorage.setItem('tenant_slug', slug);
-      localStorage.setItem('tenant_name', name);
+      localStorage.setItem('tenant_slug', tenant.slug);
+      localStorage.setItem('tenant_name', tenant.name);
+      localStorage.setItem('user_email', data.email);
       
-      window.location.href = `https://admin.jgsystemsgt.com/${slug}/dashboard`;
+      // Redirigir al dashboard
+      window.location.href = `https://admin.jgsystemsgt.com/${tenant.slug}/dashboard`;
       
     } catch (err) {
       setError(err.response?.data?.error || 'Email o contraseña incorrectos');
@@ -69,6 +85,11 @@ export const Login = () => {
       setLoading(false);
     }
   };
+
+  // Si está verificando sesión, mostrar nada
+  if (checkingSession) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4 relative overflow-hidden">
