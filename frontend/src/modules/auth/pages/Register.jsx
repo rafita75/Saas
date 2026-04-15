@@ -6,6 +6,7 @@ import { z } from 'zod';
 import api from '../../../lib/api';
 import { Mail, User, Sparkles, ArrowRight, Check, Rocket, Building2, Eye, EyeOff, Lock } from 'lucide-react';
 import { Input } from '../../../shared/components/Input';
+import { getCookie } from '../../../lib/cookies';
 
 const registerSchema = z.object({
   fullName: z.string().min(3, 'Nombre debe tener al menos 3 caracteres'),
@@ -58,6 +59,15 @@ export const Register = () => {
       </div>
     );
   }
+
+  useEffect(() => {
+    const token = getCookie('token') || localStorage.getItem('token');
+    const slug = getCookie('tenant_slug') || localStorage.getItem('tenant_slug');
+    
+    if (token && slug) {
+      window.location.href = `https://admin.jgsystemsgt.com/${slug}/dashboard`;
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4 py-12">

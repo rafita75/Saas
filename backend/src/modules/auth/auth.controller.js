@@ -138,3 +138,22 @@ export const login = async (req, res) => {
     res.status(500).json({ error: 'Error al iniciar sesión' });
   }
 };
+
+export const me = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ error: 'No token' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const user = await User.findById(decoded.userId).select('-password');
+    const tenant = await Tenant.findById(decoded.tenantId);
+    
+    res.json({ user, tenant });
+  } catch (error) {
+    res.status(401).json({ error: 'Token inválido' });
+  }
+};

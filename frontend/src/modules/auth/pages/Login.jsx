@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import api from '../../../lib/api';
 import { setCookie } from '../../../lib/cookies';
+import { getCookie } from '../../../lib/cookies';
 import { Mail, Sparkles, ArrowRight, LogIn, Lock } from 'lucide-react';
 
 // Input simple temporal
@@ -23,6 +24,7 @@ const Input = ({ label, type = 'text', icon: Icon, placeholder, error, ...props 
     {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
   </div>
 );
+
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -71,6 +73,15 @@ export const Login = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const token = getCookie('token') || localStorage.getItem('token');
+    const slug = getCookie('tenant_slug') || localStorage.getItem('tenant_slug');
+    
+    if (token && slug) {
+      window.location.href = `https://admin.jgsystemsgt.com/${slug}/dashboard`;
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4 relative overflow-hidden">
