@@ -1,5 +1,5 @@
-import { getSessionData, clearAuthCookies } from '../../lib/cookies';
-import { getMainUrl } from '../../config/domains';
+import { getSessionData, clearAuthCookies } from '../../../lib/cookies';
+import { getMainUrl } from '../../../config/domains';
 
 // ✅ Función para verificar si el token JWT ha expirado
 const isTokenExpired = (token) => {
