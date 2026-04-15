@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { clearAuthCookies, parseSessionJSON } from '../../../lib/cookies';
+import { getMainUrl } from '../../../config/domains';
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,7 +33,8 @@ const DashboardLayout = () => {
       // ✅ Limpiar cookies y localStorage
       clearAuthCookies();
       localStorage.clear();
-      window.location.href = 'https://jgsystemsgt.com';
+      // ✅ URL dinámica
+      window.location.href = getMainUrl();
     }
   };
 

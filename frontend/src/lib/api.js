@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { clearAuthCookies, getSessionData } from './cookies';
+import { getMainUrl } from '../config/domains';
 
 // ✅ Función para obtener token (cookie primero, luego localStorage)
 const getToken = () => {
@@ -34,7 +35,8 @@ api.interceptors.response.use(
       // Limpiar cookies y localStorage
       clearAuthCookies();
       localStorage.clear();
-      window.location.href = 'https://jgsystemsgt.com/login';
+      // ✅ URL dinámica
+      window.location.href = `${getMainUrl()}/login`;
     }
     return Promise.reject(error);
   }

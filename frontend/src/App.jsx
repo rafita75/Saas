@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Home } from './core/landing/pages/Home';
 import Login from './core/auth/pages/Login';
 import Register from './core/auth/pages/Register';
@@ -7,10 +7,24 @@ import DashboardHome from './core/dashboard/pages/DashboardHome';
 import SelectModules from './core/onboarding/pages/SelectModules';
 import { ProtectedRoute } from './core/auth/components/ProtectedRoute';
 import { parseSessionJSON } from './lib/cookies';
+import { getMainUrl, getAdminUrl } from './config/domains';
 
 const ExternalRedirect = ({ to }) => {
   window.location.href = to;
   return null;
+};
+
+// ✅ Componente para validar que el slug de la URL coincide con la sesión
+const SlugValidator = ({ children }) => {
+  const { slug } = useParams();
+  const tenant = parseSessionJSON('tenant', {});
+  
+  if (tenant.slug && tenant.slug !== slug) {
+    // Slug de URL no coincide con el tenant de sesión
+    return <ExternalRedirect to={getAdminUrl(tenant.slug)} />;
+  }
+  
+  return children;
 };
 
 function App() {
@@ -21,9 +35,9 @@ function App() {
     const tenant = parseSessionJSON('tenant', {});
     const slug = tenant.slug || '';
 
-    // ✅ Si no hay slug, redirigir al login (sesión corrupta)
+    // Si no hay slug, redirigir al login (sesión corrupta)
     if (!slug) {
-      return <ExternalRedirect to="https://jgsystemsgt.com/login" />;
+      return <ExternalRedirect to={`${getMainUrl()}/login`} />;
     }
     
     return (
@@ -31,14 +45,18 @@ function App() {
         {/* Onboarding - con slug en la URL */}
         <Route path="/:slug/onboarding" element={
           <ProtectedRoute>
-            <SelectModules />
+            <SlugValidator>
+              <SelectModules />
+            </SlugValidator>
           </ProtectedRoute>
         } />
         
         {/* Dashboard - con slug en la URL */}
         <Route path="/:slug/*" element={
           <ProtectedRoute>
-            <DashboardLayout />
+            <SlugValidator>
+              <DashboardLayout />
+            </SlugValidator>
           </ProtectedRoute>
         }>
           <Route index element={<DashboardHome />} />
@@ -46,8 +64,8 @@ function App() {
         </Route>
         
         {/* Redirecciones */}
-        <Route path="/" element={<ExternalRedirect to={`https://admin.jgsystemsgt.com/${slug}/dashboard`} />} />
-        <Route path="*" element={<ExternalRedirect to="https://jgsystemsgt.com/login" />} />
+        <Route path="/" element={<ExternalRedirect to={`${getAdminUrl(slug)}/dashboard`} />} />
+        <Route path="*" element={<ExternalRedirect to={`${getMainUrl()}/login`} />} />
       </Routes>
     );
   }

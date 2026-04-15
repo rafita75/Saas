@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Sparkles, Mail, Lock, ArrowRight, LogIn } from 'lucide-react';
 import api from '../../../lib/api';
 import { setCookie } from '../../../lib/cookies';
+import { getAdminUrl } from '../../../config/domains';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -28,8 +29,8 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('tenant', JSON.stringify(tenant));
       
-      // ✅ Redirección con slug
-      window.location.href = `https://admin.jgsystemsgt.com/${tenant.slug}/onboarding`;
+      // ✅ Redirección dinámica con slug
+      window.location.href = `${getAdminUrl(tenant.slug)}/onboarding`;
     } catch (err) {
       setError(err.response?.data?.error || 'Error al iniciar sesión');
     } finally {
