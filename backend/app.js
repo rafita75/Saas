@@ -22,6 +22,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'https://jgsystemsgt.com',
+    'https://www.jgsystemsgt.com',
     'https://admin.jgsystemsgt.com',
     'https://*.jgsystemsgt.com',
   ],
