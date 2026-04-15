@@ -6,7 +6,7 @@ import DashboardLayout from './core/dashboard/components/DashboardLayout';
 import DashboardHome from './core/dashboard/pages/DashboardHome';
 import SelectModules from './core/onboarding/pages/SelectModules';
 import { ProtectedRoute } from './core/auth/components/ProtectedRoute';
-import { getCookie } from './lib/cookies';
+import { getSessionData } from './lib/cookies';
 
 const ExternalRedirect = ({ to }) => {
   window.location.href = to;

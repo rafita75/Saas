@@ -2,7 +2,7 @@
 const getDomain = () => {
   const hostname = window.location.hostname;
   if (hostname === "localhost" || hostname.includes("127.0.0.1")) {
-    return "localhost";
+    return null;
   }
   return ".jgsystemsgt.com";
 };
@@ -15,8 +15,9 @@ export const setCookie = (name, value, days = 7) => {
   const expires = `expires=${date.toUTCString()}`;
   const domain = getDomain();
   const isSecure = window.location.protocol === "https:";
+  const domainPart = domain ? `domain=${domain}; ` : "";
 
-  document.cookie = `${name}=${encodedValue}; ${expires}; domain=${domain}; path=/; ${isSecure ? "secure;" : ""} samesite=lax`;
+  document.cookie = `${name}=${encodedValue}; ${expires}; ${domainPart}path=/; ${isSecure ? "secure; " : ""}samesite=lax`;
 };
 
 // Obtener cookie
@@ -32,7 +33,8 @@ export const getCookie = (name) => {
 // Eliminar cookie
 export const deleteCookie = (name) => {
   const domain = getDomain();
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=${domain}; path=/;`;
+  const domainPart = domain ? `domain=${domain}; ` : "";
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; ${domainPart}path=/;`;
 };
 
 // Limpiar todas las cookies de auth

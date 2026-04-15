@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, Outlet } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -18,7 +18,6 @@ import api from '../../../lib/api';
 import { clearAuthCookies, getSessionData } from '../../../lib/cookies';
 
 const DashboardLayout = () => {
-  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   const userStr = getSessionData('user') || '{}';
@@ -60,7 +59,7 @@ const DashboardLayout = () => {
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="h-16 flex items-center justify-between px-4 border-b border-primary/10">
-          <Link to="/dashboard" className="flex items-center gap-2">
+          <Link to={`/${tenant.slug}/dashboard`} className="flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-primary" />
             <span className="font-bold text-gradient text-sm">ModularBusiness</span>
           </Link>
