@@ -43,16 +43,24 @@ export const Login = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     setError('');
-
+  
     try {
       const response = await api.post('/auth/login', data);
       
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('tenant_slug', response.data.tenant.slug);
-      localStorage.setItem('tenant_name', response.data.tenant.name);
-      localStorage.setItem('user_email', data.email);
-      
+      const token = response.data.token;
       const slug = response.data.tenant.slug;
+      const name = response.data.tenant.name;
+      
+      // ✅ Guardar en cookie accesible desde subdominios
+      document.cookie = `token=${token}; domain=.jgsystemsgt.com; path=/; secure; samesite=lax`;
+      document.cookie = `tenant_slug=${slug}; domain=.jgsystemsgt.com; path=/; secure; samesite=lax`;
+      document.cookie = `tenant_name=${name}; domain=.jgsystemsgt.com; path=/; secure; samesite=lax`;
+      
+      // También en localStorage como respaldo
+      localStorage.setItem('token', token);
+      localStorage.setItem('tenant_slug', slug);
+      localStorage.setItem('tenant_name', name);
+      
       window.location.href = `https://admin.jgsystemsgt.com/${slug}/dashboard`;
       
     } catch (err) {
