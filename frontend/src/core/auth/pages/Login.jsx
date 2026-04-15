@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Mail, Lock, ArrowRight, LogIn } from 'lucide-react';
-import api from '../lib/api';
+import api from '../../../lib/api';
 
 export default function Login() {
   const [email, setEmail] = useState('');

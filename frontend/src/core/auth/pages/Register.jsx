@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, User, Building2, Mail, Lock, ArrowRight, Rocket } from 'lucide-react';
-import api from '../lib/api';
+import api from '../../../lib/api';
 
 export default function Register() {
   const [form, setForm] = useState({
