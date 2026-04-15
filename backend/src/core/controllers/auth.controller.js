@@ -1,71 +1,62 @@
-import bcrypt from "bcryptjs";
-import { User } from "../models/User.js";
-import { Tenant } from "../models/Tenant.js";
-import { TenantUser } from "../models/TenantUser.js";
-import { Session } from "../models/Session.js";
-import { generateToken } from "../utils/jwt.js";
-import { generateUniqueSlug } from "../utils/slug.js";
-import { validatePasswordStrength } from "../utils/password.js";
+import bcrypt from 'bcryptjs';
+import { User } from '../models/User.js';
+import { Tenant } from '../models/Tenant.js';
+import { TenantUser } from '../models/TenantUser.js';
+import { Session } from '../models/Session.js';
+import { generateToken } from '../utils/jwt.js';
+import { generateUniqueSlug } from '../utils/slug.js';
+import { validatePasswordStrength } from '../utils/password.js';
 
 export const register = async (req, res) => {
   try {
     const { fullName, businessName, email, password } = req.body;
 
-    // Validar fortaleza de contraseña
     const passwordValidation = validatePasswordStrength(password);
     if (!passwordValidation.isValid) {
       return res.status(400).json({
         success: false,
-        error: "Contraseña débil",
+        error: 'Contraseña débil',
         details: passwordValidation.errors,
       });
     }
 
-    // Verificar si el email ya existe
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        error: "Este email ya está registrado",
+        error: 'Este email ya está registrado',
       });
     }
 
-    // Generar slug único para el tenant
     const slug = await generateUniqueSlug(businessName, Tenant);
 
-    // ✅ Hashear contraseña manualmente
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Crear usuario con contraseña hasheada
     const user = await User.create({
       fullName,
       email,
       password: hashedPassword,
     });
 
-    // Crear tenant
     const tenant = await Tenant.create({
       name: businessName,
       slug,
       ownerId: user._id,
     });
 
-    // Crear relación tenant_user como owner
     await TenantUser.create({
       tenantId: tenant._id,
       userId: user._id,
-      role: "owner",
+      role: 'owner',
     });
 
-    // Generar token JWT
     const token = generateToken({
       userId: user._id,
       tenantId: tenant._id,
       slug: tenant.slug,
     });
 
-    // Crear sesión
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
@@ -74,7 +65,7 @@ export const register = async (req, res) => {
       tenantId: tenant._id,
       token,
       ip: req.ip,
-      userAgent: req.headers["user-agent"],
+      userAgent: req.headers['user-agent'],
       expiresAt,
     });
 
@@ -93,10 +84,10 @@ export const register = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error en registro:", error);
+    console.error('Error en registro:', error);
     res.status(500).json({
       success: false,
-      error: "Error al crear la cuenta: " + error.message,
+      error: 'Error al crear la cuenta',
     });
   }
 };
@@ -105,50 +96,42 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Buscar usuario
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
         success: false,
-        error: "Email o contraseña incorrectos",
+        error: 'Email o contraseña incorrectos',
       });
     }
 
-    // Verificar contraseña
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        error: "Email o contraseña incorrectos",
+        error: 'Email o contraseña incorrectos',
       });
     }
 
-    // Obtener el primer tenant del usuario
-    const tenantUser = await TenantUser.findOne({ userId: user._id }).populate(
-      "tenantId",
-    );
-
+    const tenantUser = await TenantUser.findOne({ userId: user._id }).populate('tenantId');
+    
     if (!tenantUser) {
       return res.status(404).json({
         success: false,
-        error: "No se encontró un negocio asociado a tu cuenta",
+        error: 'No se encontró un negocio asociado a tu cuenta',
       });
     }
 
     const tenant = tenantUser.tenantId;
 
-    // Actualizar último login
     user.lastLogin = new Date();
     await user.save();
 
-    // Generar token JWT
     const token = generateToken({
       userId: user._id,
       tenantId: tenant._id,
       slug: tenant.slug,
     });
 
-    // Crear sesión
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
@@ -157,7 +140,7 @@ export const login = async (req, res) => {
       tenantId: tenant._id,
       token,
       ip: req.ip,
-      userAgent: req.headers["user-agent"],
+      userAgent: req.headers['user-agent'],
       expiresAt,
     });
 
@@ -179,59 +162,69 @@ export const login = async (req, res) => {
       role: tenantUser.role,
     });
   } catch (error) {
-    console.error("Error en login:", error);
+    console.error('Error en login:', error);
     res.status(500).json({
       success: false,
-      error: "Error al iniciar sesión",
+      error: 'Error al iniciar sesión',
     });
   }
 };
 
-/**
- * Logout - Cerrar sesión
- * POST /api/auth/logout
- */
-export const logout = asyncHandler(async (req, res) => {
-  const token = req.token;
+export const logout = async (req, res) => {
+  try {
+    const token = req.token;
 
-  if (token) {
-    // Eliminar la sesión actual
-    await Session.deleteOne({ token });
+    if (token) {
+      await Session.deleteOne({ token });
+    }
+
+    res.json({
+      success: true,
+      message: 'Sesión cerrada correctamente',
+    });
+  } catch (error) {
+    console.error('Error en logout:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al cerrar sesión',
+    });
   }
+};
 
-  res.json({
-    success: true,
-    message: "Sesión cerrada correctamente",
-  });
-});
+export const logoutAll = async (req, res) => {
+  try {
+    await Session.deleteMany({
+      userId: req.user._id,
+      tenantId: req.tenant._id,
+    });
 
-/**
- * Logout de todos los dispositivos
- * POST /api/auth/logout-all
- */
-export const logoutAll = asyncHandler(async (req, res) => {
-  // Eliminar todas las sesiones del usuario para el tenant actual
-  await Session.deleteMany({
-    userId: req.user._id,
-    tenantId: req.tenant._id,
-  });
+    res.json({
+      success: true,
+      message: 'Sesión cerrada en todos los dispositivos',
+    });
+  } catch (error) {
+    console.error('Error en logoutAll:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al cerrar todas las sesiones',
+    });
+  }
+};
 
-  res.json({
-    success: true,
-    message: "Sesión cerrada en todos los dispositivos",
-  });
-});
-
-/**
- * Obtener datos del usuario autenticado
- * GET /api/auth/me
- */
-export const me = asyncHandler(async (req, res) => {
-  res.json({
-    success: true,
-    user: req.user,
-    tenant: req.tenant,
-    role: req.tenantUser.role,
-    permissions: req.tenantUser.permissions,
-  });
-});
+export const me = async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      user: req.user,
+      tenant: req.tenant,
+      role: req.tenantUser.role,
+      permissions: req.tenantUser.permissions,
+    });
+  } catch (error) {
+    console.error('Error en me:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener datos del usuario',
+    });
+  }
+};

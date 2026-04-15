@@ -1,230 +1,188 @@
-import bcrypt from 'bcryptjs';
+import { verifyToken, extractTokenFromHeader } from '../utils/jwt.js';
+import { Session } from '../models/Session.js';
 import { User } from '../models/User.js';
 import { Tenant } from '../models/Tenant.js';
 import { TenantUser } from '../models/TenantUser.js';
-import { Session } from '../models/Session.js';
-import { generateToken } from '../utils/jwt.js';
-import { generateUniqueSlug } from '../utils/slug.js';
-import { validatePasswordStrength } from '../utils/password.js';
 
-export const register = async (req, res) => {
+/**
+ * Middleware de autenticación obligatoria
+ * Verifica que el usuario esté autenticado y la sesión sea válida
+ */
+export const authMiddleware = async (req, res, next) => {
   try {
-    const { fullName, businessName, email, password } = req.body;
-
-    const passwordValidation = validatePasswordStrength(password);
-    if (!passwordValidation.isValid) {
-      return res.status(400).json({
-        success: false,
-        error: 'Contraseña débil',
-        details: passwordValidation.errors,
-      });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        error: 'Este email ya está registrado',
-      });
-    }
-
-    const slug = await generateUniqueSlug(businessName, Tenant);
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = await User.create({
-      fullName,
-      email,
-      password: hashedPassword,
-    });
-
-    const tenant = await Tenant.create({
-      name: businessName,
-      slug,
-      ownerId: user._id,
-    });
-
-    await TenantUser.create({
-      tenantId: tenant._id,
-      userId: user._id,
-      role: 'owner',
-    });
-
-    const token = generateToken({
-      userId: user._id,
-      tenantId: tenant._id,
-      slug: tenant.slug,
-    });
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-
-    await Session.create({
-      userId: user._id,
-      tenantId: tenant._id,
-      token,
-      ip: req.ip,
-      userAgent: req.headers['user-agent'],
-      expiresAt,
-    });
-
-    res.status(201).json({
-      success: true,
-      token,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-      },
-      tenant: {
-        id: tenant._id,
-        name: tenant.name,
-        slug: tenant.slug,
-      },
-    });
-  } catch (error) {
-    console.error('Error en registro:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al crear la cuenta',
-    });
-  }
-};
-
-export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Email o contraseña incorrectos',
-      });
-    }
-
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        error: 'Email o contraseña incorrectos',
-      });
-    }
-
-    const tenantUser = await TenantUser.findOne({ userId: user._id }).populate('tenantId');
+    const token = extractTokenFromHeader(req.headers.authorization);
     
-    if (!tenantUser) {
-      return res.status(404).json({
-        success: false,
-        error: 'No se encontró un negocio asociado a tu cuenta',
+    if (!token) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'No se proporcionó token de autenticación' 
       });
     }
 
-    const tenant = tenantUser.tenantId;
-
-    user.lastLogin = new Date();
-    await user.save();
-
-    const token = generateToken({
-      userId: user._id,
-      tenantId: tenant._id,
-      slug: tenant.slug,
-    });
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-
-    await Session.create({
-      userId: user._id,
-      tenantId: tenant._id,
-      token,
-      ip: req.ip,
-      userAgent: req.headers['user-agent'],
-      expiresAt,
-    });
-
-    res.json({
-      success: true,
-      token,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        avatar: user.avatar,
-      },
-      tenant: {
-        id: tenant._id,
-        name: tenant.name,
-        slug: tenant.slug,
-        logo: tenant.logo,
-      },
-      role: tenantUser.role,
-    });
-  } catch (error) {
-    console.error('Error en login:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al iniciar sesión',
-    });
-  }
-};
-
-export const logout = async (req, res) => {
-  try {
-    const token = req.token;
-
-    if (token) {
-      await Session.deleteOne({ token });
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Token inválido o expirado' 
+      });
     }
 
-    res.json({
-      success: true,
-      message: 'Sesión cerrada correctamente',
+    const session = await Session.findOne({ token });
+    if (!session) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Sesión inválida o cerrada' 
+      });
+    }
+
+    const user = await User.findById(decoded.userId).select('-password');
+    if (!user) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Usuario no encontrado' 
+      });
+    }
+
+    const tenant = await Tenant.findById(decoded.tenantId);
+    if (!tenant) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Negocio no encontrado' 
+      });
+    }
+
+    if (tenant.status !== 'active') {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Este negocio no está activo' 
+      });
+    }
+
+    const tenantUser = await TenantUser.findOne({
+      tenantId: tenant._id,
+      userId: user._id,
     });
+
+    if (!tenantUser) {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'No tienes acceso a este negocio' 
+      });
+    }
+
+    req.user = user;
+    req.tenant = tenant;
+    req.tenantUser = tenantUser;
+    req.session = session;
+    req.token = token;
+
+    // ✅ Solo llamamos a next() si todo está bien
+    next();
   } catch (error) {
-    console.error('Error en logout:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al cerrar sesión',
+    console.error('Error en authMiddleware:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Error al verificar autenticación' 
     });
   }
 };
 
-export const logoutAll = async (req, res) => {
+/**
+ * Middleware de autenticación opcional
+ * Adjunta los datos si hay token, pero no bloquea si no lo hay
+ */
+export const optionalAuthMiddleware = async (req, res, next) => {
   try {
-    await Session.deleteMany({
-      userId: req.user._id,
-      tenantId: req.tenant._id,
+    const token = extractTokenFromHeader(req.headers.authorization);
+    
+    if (!token) {
+      return next();
+    }
+
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return next();
+    }
+
+    const session = await Session.findOne({ token });
+    if (!session) {
+      return next();
+    }
+
+    const user = await User.findById(decoded.userId).select('-password');
+    const tenant = await Tenant.findById(decoded.tenantId);
+    const tenantUser = await TenantUser.findOne({
+      tenantId: tenant?._id,
+      userId: user?._id,
     });
 
-    res.json({
-      success: true,
-      message: 'Sesión cerrada en todos los dispositivos',
-    });
+    req.user = user;
+    req.tenant = tenant;
+    req.tenantUser = tenantUser;
+    req.session = session;
+    req.token = token;
+
+    next();
   } catch (error) {
-    console.error('Error en logoutAll:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al cerrar todas las sesiones',
-    });
+    // Si hay error, simplemente continuamos sin autenticación
+    next();
   }
 };
 
-export const me = async (req, res) => {
-  try {
-    res.json({
-      success: true,
-      user: req.user,
-      tenant: req.tenant,
-      role: req.tenantUser.role,
-      permissions: req.tenantUser.permissions,
-    });
-  } catch (error) {
-    console.error('Error en me:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al obtener datos del usuario',
-    });
-  }
+/**
+ * Middleware para verificar roles específicos
+ * @param {string[]} allowedRoles - Roles permitidos
+ */
+export const roleMiddleware = (allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.tenantUser) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'No autenticado' 
+      });
+    }
+
+    if (!allowedRoles.includes(req.tenantUser.role)) {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'No tienes permiso para realizar esta acción' 
+      });
+    }
+
+    next();
+  };
+};
+
+/**
+ * Middleware para verificar permisos específicos
+ * @param {string[]} requiredPermissions - Permisos requeridos
+ */
+export const permissionMiddleware = (requiredPermissions) => {
+  return (req, res, next) => {
+    if (!req.tenantUser) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'No autenticado' 
+      });
+    }
+
+    // Owner tiene todos los permisos
+    if (req.tenantUser.role === 'owner') {
+      return next();
+    }
+
+    const userPermissions = req.tenantUser.permissions || [];
+    const hasAllPermissions = requiredPermissions.every(
+      perm => userPermissions.includes(perm)
+    );
+
+    if (!hasAllPermissions) {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'No tienes los permisos necesarios para esta acción' 
+      });
+    }
+
+    next();
+  };
 };
