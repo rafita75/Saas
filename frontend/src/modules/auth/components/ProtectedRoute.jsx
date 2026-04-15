@@ -1,10 +1,11 @@
 import { getCookie } from '../../../lib/cookies';
+import { useEffect } from 'react';
 
 export const ProtectedRoute = ({ children }) => {
   const token = getCookie('token') || localStorage.getItem('token');
   
+  // ✅ Forzar verificación en cada render
   if (!token) {
-    // Mostrar mensaje de acceso denegado con enlace a login
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4">
         <div className="glass rounded-2xl p-8 border border-red-500/30 text-center max-w-md">

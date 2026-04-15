@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';  // ✅ Agregar useEffect
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import api from '../../../lib/api';
-import { setCookie } from '../../../lib/cookies';
+import { setCookie, getCookie } from '../../../lib/cookies';  // ✅ Agregar getCookie
 import { Mail, Sparkles, ArrowRight, LogIn, Lock } from 'lucide-react';
 
 // Input simple
@@ -40,6 +40,16 @@ export const Login = () => {
   } = useForm({
     resolver: zodResolver(loginSchema),
   });
+
+  // ✅ VERIFICAR SI YA TIENE SESIÓN (SOLO UNA VEZ AL MONTAR)
+  useEffect(() => {
+    const token = getCookie('token') || localStorage.getItem('token');
+    const slug = getCookie('tenant_slug') || localStorage.getItem('tenant_slug');
+    
+    if (token && slug) {
+      window.location.href = `https://admin.jgsystemsgt.com/${slug}/dashboard`;
+    }
+  }, []); // ← Array vacío = solo se ejecuta al montar
 
   const onSubmit = async (data) => {
     setLoading(true);
