@@ -2,42 +2,50 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { connectDB } from './src/core/database/mongodb.js';
-import authRoutes from './src/modules/auth/auth.routes.js';
+import mongoose from 'mongoose';
+import routes from './src/core/routes/index.js';
+import { errorHandler, notFound } from './src/core/middleware/error.middleware.js';
+import { tenantResolver } from './src/core/middleware/tenant.middleware.js';
 
 dotenv.config();
 
 const app = express();
 
-// Conectar a MongoDB
-connectDB();
+// Conexión a MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('✅ MongoDB conectado'))
+  .catch(err => console.error('❌ MongoDB error:', err));
 
-// Middlewares
+// Middlewares globales
 app.use(helmet());
 app.use(cors({
   origin: [
     'http://localhost:5173',
-    'http://localhost:3000',
     'https://jgsystemsgt.com',
-    'https://www.jgsystemsgt.com',
     'https://admin.jgsystemsgt.com',
     'https://*.jgsystemsgt.com',
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use('/api/auth', authRoutes);
+// Middleware de tenant (intenta resolver el tenant por subdominio)
+app.use(tenantResolver);
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+// API Routes
+app.use('/api', routes);
+
+// Manejo de errores
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor en http://localhost:${PORT}`);
+  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`📡 API: http://localhost:${PORT}/api`);
+  console.log(`❤️  Health: http://localhost:${PORT}/api/health`);
 });
+
+export default app;
