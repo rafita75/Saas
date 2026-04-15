@@ -20,6 +20,12 @@ function App() {
     const tenant = JSON.parse(localStorage.getItem('tenant') || '{}');
     const slug = tenant.slug || '';
     
+    // ✅ Si no hay slug, redirigir al login (sesión corrupta)
+    if (!slug) {
+      localStorage.clear();
+      return <ExternalRedirect to="https://jgsystemsgt.com/login" />;
+    }
+    
     return (
       <Routes>
         {/* Onboarding - con slug en la URL */}

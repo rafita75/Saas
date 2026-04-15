@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, Check, Layout, Users, ShoppingBag, Package, Store, Calendar, Calculator, UserCog, Building2, Shield, Lock } from 'lucide-react';
 import { GlowCard } from '../../../shared/components/GlowCard';
+import api from '../../../lib/api';
 
 const AVAILABLE_MODULES = [
   { id: 'landing', name: 'Landing Page', description: 'Crea páginas profesionales con constructor drag & drop', icon: Layout, price: 39, color: 'from-blue-500/20 to-cyan-500/20', iconColor: 'text-cyan-400' },
@@ -41,10 +42,34 @@ export default function SelectModules() {
 
   const calculateTotal = () => selectedModules.reduce((total, moduleId) => total + (AVAILABLE_MODULES.find(m => m.id === moduleId)?.price || 0), 0);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     setLoading(true);
-    // ✅ Redirección con slug
-    window.location.href = `https://admin.jgsystemsgt.com/${tenant.slug}/dashboard`;
+    setError('');
+    
+    try {
+      // ✅ Guardar módulos seleccionados en el backend
+      // Contratar cada módulo seleccionado (plan básico por defecto)
+      for (const moduleId of selectedModules) {
+        const module = AVAILABLE_MODULES.find(m => m.id === moduleId);
+        if (!module) continue;
+        
+        // TODO: Obtener el planId correcto (por ahora usamos el primer plan disponible)
+        // Por ahora, simulamos la contratación
+        console.log(`Contratando módulo: ${module.name}`);
+        
+        // await api.post('/modules/tenant', {
+        //   moduleId: module._id, // Necesitaríamos el ID real de la BD
+        //   planId: plan._id,
+        //   autoRenew: true
+        // });
+      }
+      
+      // Redirección con slug
+      window.location.href = `https://admin.jgsystemsgt.com/${tenant.slug}/dashboard`;
+    } catch (err) {
+      setError('Error al guardar los módulos. Intenta de nuevo.');
+      setLoading(false);
+    }
   };
 
   const total = calculateTotal();
