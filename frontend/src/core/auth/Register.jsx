@@ -31,7 +31,7 @@ export default function Register() {
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('tenant', JSON.stringify(tenant));
       
-      window.location.href = `https://admin.jgsystemsgt.com/${tenant.slug}/dashboard`;
+      window.location.href = `https://admin.jgsystemsgt.com/onboarding`;
     } catch (err) {
       setError(err.response?.data?.error || 'Error al registrar');
     } finally {

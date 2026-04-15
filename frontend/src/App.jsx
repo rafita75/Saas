@@ -4,6 +4,7 @@ import Login from './core/auth/pages/Login';
 import Register from './core/auth/pages/Register';
 import DashboardLayout from './core/dashboard/components/DashboardLayout';
 import DashboardHome from './core/dashboard/pages/DashboardHome';
+import SelectModules from './core/onboarding/pages/SelectModules';
 import { ProtectedRoute } from './core/auth/components/ProtectedRoute';
 
 function App() {
@@ -15,6 +16,14 @@ function App() {
     
     return (
       <Routes>
+        {/* Onboarding - Selección de módulos */}
+        <Route path="/onboarding" element={
+          <ProtectedRoute>
+            <SelectModules />
+          </ProtectedRoute>
+        } />
+        
+        {/* Dashboard */}
         <Route path="/:slug/*" element={
           <ProtectedRoute>
             <DashboardLayout />
@@ -23,6 +32,7 @@ function App() {
           <Route index element={<DashboardHome />} />
           <Route path="dashboard" element={<DashboardHome />} />
         </Route>
+        
         <Route path="*" element={<Navigate to={`/${tenant.slug || ''}`} replace />} />
       </Routes>
     );
