@@ -14,6 +14,8 @@ export const register = async (req, res) => {
 
   try {
     const { fullName, businessName, email, password } = req.body;
+    
+    email = email?.trim().toLowerCase();
 
     const passwordValidation = validatePasswordStrength(password);
     if (!passwordValidation.isValid) {
@@ -98,6 +100,8 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    email = email?.trim().toLowerCase();
 
     const user = await User.findOne({ email });
     if (!user) {

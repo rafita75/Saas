@@ -70,13 +70,13 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
+    // ✅ Separar tenant autenticado del solicitado
     req.user = user;
-    req.tenant = tenant;
+    req.authenticatedTenant = tenant;  // Tenant del token
     req.tenantUser = tenantUser;
     req.session = session;
     req.token = token;
 
-    // ✅ Solo llamamos a next() si todo está bien
     next();
   } catch (error) {
     console.error('Error en authMiddleware:', error);

@@ -5,27 +5,33 @@
  */
 export const validatePasswordStrength = (password) => {
   const errors = [];
-
+  
+  // ✅ Validar que password existe
+  if (!password || typeof password !== 'string') {
+    errors.push('La contraseña es requerida');
+    return { isValid: false, errors };
+  }
+  
   if (password.length < 8) {
-    errors.push("Mínimo 8 caracteres");
+    errors.push('Mínimo 8 caracteres');
   }
-
+  
   if (!/[A-Z]/.test(password)) {
-    errors.push("Debe contener al menos una mayúscula");
+    errors.push('Debe contener al menos una mayúscula');
   }
-
+  
   if (!/[a-z]/.test(password)) {
-    errors.push("Debe contener al menos una minúscula");
+    errors.push('Debe contener al menos una minúscula');
   }
-
+  
   if (!/[0-9]/.test(password)) {
-    errors.push("Debe contener al menos un número");
+    errors.push('Debe contener al menos un número');
   }
-
+  
   if (!/[^A-Za-z0-9]/.test(password)) {
-    errors.push("Debe contener al menos un símbolo (!@#$%^&*)");
+    errors.push('Debe contener al menos un símbolo (!@#$%^&*)');
   }
-
+  
   return {
     isValid: errors.length === 0,
     errors,

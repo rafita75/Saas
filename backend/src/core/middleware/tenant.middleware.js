@@ -7,7 +7,7 @@ export const tenantResolver = async (req, res, next) => {
   try {
     let slug = null;
     
-    // ✅ 1. Prioridad: params de la URL
+    // 1. Prioridad: params de la URL
     if (req.params.slug) {
       slug = req.params.slug;
     }
@@ -32,8 +32,10 @@ export const tenantResolver = async (req, res, next) => {
     }
     
     if (slug) {
-      const tenant = await Tenant.findOne({ slug, status: 'active' });
-      if (tenant) req.tenant = tenant;
+      const requestedTenant = await Tenant.findOne({ slug, status: 'active' });
+      if (requestedTenant) {
+        req.requestedTenant = requestedTenant;  // ✅ No sobrescribir req.tenant
+      }
     }
     
     next();
@@ -120,4 +122,28 @@ export const removeMember = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
+};
+
+export const validateTenantAccess = (req, res, next) => {
+  // Si hay un tenant solicitado, debe coincidir con el autenticado
+  if (req.requestedTenant && req.authenticatedTenant) {
+    if (req.requestedTenant._id.toString() !== req.authenticatedTenant._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'No tienes acceso a este negocio',
+      });
+    }
+  }
+  
+  // Para compatibilidad, mantener req.tenant
+  req.tenant = req.authenticatedTenant || req.requestedTenant;
+  
+  if (!req.tenant) {
+    return res.status(400).json({
+      success: false,
+      error: 'No se pudo determinar el negocio',
+    });
+  }
+  
+  next();
 };

@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 import { validatePasswordStrength } from '../utils/password.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
@@ -44,9 +45,25 @@ export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    const user = await User.findById(req.user._id);
-    const isPasswordValid = await user.comparePassword(currentPassword);
+    // ✅ Validar que newPassword existe
+    if (!newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'La nueva contraseña es requerida',
+      });
+    }
 
+    const user = await User.findById(req.user._id);
+    
+    // ✅ Validar currentPassword
+    if (!currentPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'La contraseña actual es requerida',
+      });
+    }
+
+    const isPasswordValid = await user.comparePassword(currentPassword);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
@@ -63,10 +80,12 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    // ✅ Hashear manualmente
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
     await user.save();
+
+    // ✅ Invalidar todas las sesiones (opcional - por seguridad)
+    // await Session.deleteMany({ userId: user._id });
 
     res.json({
       success: true,
