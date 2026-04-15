@@ -140,6 +140,14 @@ export const updateMemberRole = asyncHandler(async (req, res) => {
   const { role } = req.body;
   const tenant = req.authenticatedTenant || req.tenant;
 
+  const allowedRoles = ['admin', 'manager', 'staff'];
+  if (!role || !allowedRoles.includes(role)) {
+    return res.status(400).json({
+      success: false,
+      error: `Rol inválido. Debe ser: ${allowedRoles.join(', ')}`,
+    });
+  }
+  
   if (req.tenantUser?.role !== "owner") {
     return res
       .status(403)
