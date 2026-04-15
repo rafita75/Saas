@@ -2,17 +2,29 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from './core/landing/pages/Home';
 import Login from './core/auth/pages/Login';
 import Register from './core/auth/pages/Register';
+import DashboardLayout from './core/dashboard/components/DashboardLayout';
+import DashboardHome from './core/dashboard/pages/DashboardHome';
+import { ProtectedRoute } from './core/auth/components/ProtectedRoute';
 
 function App() {
   const hostname = window.location.hostname;
   const isAdmin = hostname.startsWith('admin.');
 
   if (isAdmin) {
-    // TODO: Agregar Dashboard
+    const tenant = JSON.parse(localStorage.getItem('tenant') || '{}');
+    
     return (
-      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
-        <p className="text-white">Dashboard en construcción</p>
-      </div>
+      <Routes>
+        <Route path="/:slug/*" element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<DashboardHome />} />
+          <Route path="dashboard" element={<DashboardHome />} />
+        </Route>
+        <Route path="*" element={<Navigate to={`/${tenant.slug || ''}`} replace />} />
+      </Routes>
     );
   }
 
