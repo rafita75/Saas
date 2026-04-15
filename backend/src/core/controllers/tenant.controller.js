@@ -38,6 +38,7 @@ export const getTenant = asyncHandler(async (req, res) => {
       name: tenant.name,
       slug: tenant.slug,
       logo: tenant.logo,
+      hasCompletedOnboarding: tenant.hasCompletedOnboarding || false,
     },
   });
 });
@@ -81,6 +82,14 @@ export const inviteUser = asyncHandler(async (req, res) => {
     });
   }
 
+  // No permitir invitar con rol owner
+  if (role === 'owner') {
+    return res.status(400).json({
+      success: false,
+      error: 'No se puede invitar a otro usuario como dueño',
+    });
+  }
+
   if (!["owner", "admin"].includes(tenantUser?.role)) {
     return res
       .status(403)
@@ -90,7 +99,7 @@ export const inviteUser = asyncHandler(async (req, res) => {
       });
   }
 
-  let user = await User.findOne({ email: email?.toLowerCase() });
+  let user = await User.findOne({ email: email?.trim().toLowerCase() });
 
   if (!user) {
     return res
@@ -123,7 +132,7 @@ export const inviteUser = asyncHandler(async (req, res) => {
     joinedAt: new Date(),
   });
 
-  res.json({ success: true, message: "Usuario invitado correctamente" });
+  res.json({ success: true, message: `Usuario invitado correctamente como ${role}` });
 });
 
 export const getMembers = asyncHandler(async (req, res) => {
@@ -171,7 +180,7 @@ export const updateMemberRole = asyncHandler(async (req, res) => {
   member.role = role;
   await member.save();
 
-  res.json({ success: true, message: "Rol actualizado correctamente" });
+  res.json({ success: true, message: `Rol actualizado a ${role} correctamente` });
 });
 
 export const removeMember = asyncHandler(async (req, res) => {
@@ -198,4 +207,29 @@ export const removeMember = asyncHandler(async (req, res) => {
   await TenantUser.deleteOne({ _id: member._id });
 
   res.json({ success: true, message: "Miembro eliminado correctamente" });
+});
+
+// ✅ NUEVO: Marcar onboarding como completado
+export const completeOnboarding = asyncHandler(async (req, res) => {
+  const tenant = req.authenticatedTenant || req.tenant;
+  
+  if (!tenant) {
+    return res.status(404).json({
+      success: false,
+      error: 'Negocio no encontrado',
+    });
+  }
+  
+  tenant.hasCompletedOnboarding = true;
+  await tenant.save();
+  
+  res.json({
+    success: true,
+    message: 'Onboarding completado correctamente',
+    tenant: {
+      id: tenant._id,
+      slug: tenant.slug,
+      hasCompletedOnboarding: true,
+    },
+  });
 });

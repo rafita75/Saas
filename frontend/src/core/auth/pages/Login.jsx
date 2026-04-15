@@ -29,8 +29,12 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('tenant', JSON.stringify(tenant));
       
-      // ✅ Redirección dinámica con slug
-      window.location.href = `${getAdminUrl(tenant.slug)}/onboarding`;
+      // ✅ Redirección condicional: si ya completó onboarding, va al dashboard
+      if (tenant.hasCompletedOnboarding) {
+        window.location.href = `${getAdminUrl(tenant.slug)}/dashboard`;
+      } else {
+        window.location.href = `${getAdminUrl(tenant.slug)}/onboarding`;
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Error al iniciar sesión');
     } finally {

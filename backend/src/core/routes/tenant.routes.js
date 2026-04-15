@@ -9,9 +9,13 @@ import {
   getMembers,
   updateMemberRole,
   removeMember,
+  completeOnboarding,
 } from '../controllers/tenant.controller.js';
 
 const router = Router();
+
+// ✅ Ruta para completar onboarding (no requiere slug en URL)
+router.post('/onboarding/complete', authMiddleware, completeOnboarding);
 
 // Rutas que no requieren tenant específico
 router.get('/', authMiddleware, getMyTenants);

@@ -27,6 +27,11 @@ const tenantSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  // ✅ Nuevo campo para controlar onboarding
+  hasCompletedOnboarding: {
+    type: Boolean,
+    default: false,
+  },
   settings: {
     theme: {
       primaryColor: { type: String, default: '#6366F1' },

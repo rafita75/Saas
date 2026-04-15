@@ -110,7 +110,6 @@ export const login = async (req, res) => {
   try {
     let { email, password } = req.body;
     
-    // ✅ Corregido: usar let en lugar de const
     email = email?.trim().toLowerCase();
     
     if (!email || !password) {
@@ -182,6 +181,7 @@ export const login = async (req, res) => {
         name: tenant.name,
         slug: tenant.slug,
         logo: tenant.logo,
+        hasCompletedOnboarding: tenant.hasCompletedOnboarding || false, // ✅ Agregado
       },
       role: tenantUser.role,
     });
