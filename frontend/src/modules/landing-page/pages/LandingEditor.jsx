@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, ArrowLeft, Layout, Settings, Eye, Check, ChevronRight, Type, Edit3, Globe, Plus, Trash2, Smartphone, Monitor, X, Palette, List, Layers } from 'lucide-react';
+import { Save, ArrowLeft, Layout, Settings, Eye, Check, ChevronRight, Type, Edit3, Globe, Plus, Trash2, Smartphone, Monitor, X, Palette, List, Layers, Minimize2, Maximize2 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../core/auth/context/AuthContext'; 
 import api from '../../../lib/api'; 
@@ -16,14 +16,15 @@ const LandingEditor = () => {
   const [activeTab, setActiveTab] = useState('editor');
   const [toast, setToast] = useState(null);
   const [isNew, setIsNew] = useState(!id);
+  const [zoom, setZoom] = useState(0.8);
 
-  // Zustand Store
   const { 
     pageData, 
     setPageData, 
     selectedSectionIndex, 
     setSelectedSectionIndex,
     updateSectionContent,
+    updateListItem,
     moveSection,
     deleteSection
   } = useBuilderStore();
@@ -46,13 +47,7 @@ const LandingEditor = () => {
   }, [id, tenant?.slug]);
 
   const selectTemplate = (t) => {
-    setPageData({ 
-      ...pageData, 
-      name: t.name, 
-      sections: t.sections.map((s, idx) => ({ ...s, id: `${s.type}-${idx}-${Date.now()}` })), 
-      theme: t.theme, 
-      templateId: t.id 
-    });
+    setPageData({ ...pageData, name: t.name, sections: t.sections.map((s, idx) => ({ ...s, id: `${s.type}-${idx}-${Date.now()}` })), theme: t.theme, templateId: t.id });
   };
 
   const handleSave = async () => {
@@ -61,7 +56,7 @@ const LandingEditor = () => {
       setLoading(true);
       if (isNew) await api.post('/landings', pageData);
       else await api.put(`/landings/${id}`, pageData);
-      setToast({ message: '¡Página actualizada!', type: 'success' });
+      setToast({ message: '¡Publicación exitosa!', type: 'success' });
       setTimeout(() => navigate(`/${tenant?.slug}/landings`), 1500);
     } catch (err) {
       setToast({ message: err.response?.data?.error || 'Error al guardar', type: 'error' });
@@ -71,11 +66,10 @@ const LandingEditor = () => {
 
   if (loading && isNew && pageData.sections.length === 0) return <div className="min-h-screen flex items-center justify-center bg-white"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div></div>;
 
-  // Pantalla de Selección de Plantilla
   if (isNew && pageData.sections.length === 0) return (
     <div className="min-h-screen bg-slate-50 p-8 lg:p-24 flex flex-col items-center justify-center space-y-20">
       <div className="text-center space-y-6">
-        <h2 className="text-7xl lg:text-[6rem] font-bold text-slate-900 tracking-tighter leading-none">Diseña tu <span className="text-indigo-600">Éxito</span></h2>
+        <h2 className="text-7xl lg:text-[6rem] font-bold text-slate-900 tracking-tighter leading-none">Diseña tu <span className="text-indigo-600 underline decoration-indigo-100 decoration-[20px] underline-offset-[-15px]">Éxito</span></h2>
         <p className="text-slate-500 text-xl font-medium max-w-2xl mx-auto">Elige una estructura profesional y personalízala en segundos.</p>
       </div>
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -96,91 +90,115 @@ const LandingEditor = () => {
   return (
     <div className="h-screen flex flex-col bg-slate-100 overflow-hidden font-sans selection:bg-indigo-600/20 antialiased">
       
-      {/* Top Header */}
-      <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-50">
-        <div className="flex items-center gap-8">
-          <button onClick={() => navigate(`/${tenant?.slug}/landings`)} className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 transition-all"><ArrowLeft size={20} /></button>
+      {/* Top Header - Más compacto y elegante */}
+      <header className="h-16 bg-slate-900 border-b border-white/5 flex items-center justify-between px-6 shrink-0 z-50">
+        <div className="flex items-center gap-6">
+          <button onClick={() => navigate(`/${tenant?.slug}/landings`)} className="p-2 hover:bg-white/10 rounded-xl text-slate-400 transition-all"><ArrowLeft size={18} /></button>
           <div className="flex flex-col">
             <input 
               type="text" 
               value={pageData.name} 
               onChange={(e) => setPageData({...pageData, name: e.target.value})} 
-              className="bg-transparent text-lg font-bold text-slate-900 outline-none border-b border-transparent focus:border-indigo-600/30" 
+              className="bg-transparent text-sm font-bold text-white outline-none border-b border-transparent focus:border-indigo-500/50 w-64" 
               placeholder="Nombre de la página" 
             />
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Constructor Visual / {pageData.templateId}</span>
+            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{pageData.templateId} / BUILDER</span>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="bg-slate-100 p-1 rounded-2xl flex border border-slate-200">
-            {[{ id: 'editor', label: 'Lienzo', icon: Layout }, { id: 'settings', label: 'SEO', icon: Globe }].map(tab => (
-              <button 
-                key={tab.id} 
-                onClick={() => setActiveTab(tab.id)} 
-                className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-3 ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-500 hover:text-slate-900'}`}
-              >
-                <tab.icon size={14} /> {tab.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2 bg-black/20 p-1 rounded-xl mr-4 border border-white/5">
+             <button onClick={() => setZoom(Math.max(0.4, zoom - 0.1))} className="p-1.5 text-slate-400 hover:text-white"><Minimize2 size={12}/></button>
+             <span className="text-[10px] font-black text-slate-500 w-10 text-center">{Math.round(zoom * 100)}%</span>
+             <button onClick={() => setZoom(Math.min(1, zoom + 0.1))} className="p-1.5 text-slate-400 hover:text-white"><Maximize2 size={12}/></button>
           </div>
-          <button 
-            onClick={handleSave} 
-            className="bg-slate-900 hover:bg-black text-white px-8 py-3.5 rounded-2xl font-bold text-xs uppercase flex items-center gap-3 shadow-xl transition-all active:scale-95"
-          >
-            <Save size={18} /> Publicar
-          </button>
+          <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+            <button onClick={() => setActiveTab('editor')} className={`p-2 rounded-lg transition-all ${activeTab === 'editor' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-white/5'}`}><Layout size={18}/></button>
+            <button onClick={() => setActiveTab('settings')} className={`p-2 rounded-lg transition-all ${activeTab === 'settings' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-400 hover:bg-white/5'}`}><Globe size={18}/></button>
+          </div>
+          <button onClick={handleSave} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-xl transition-all active:scale-95 ml-2">Publicar</button>
         </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden">
         
-        {/* Sidebar Inspector */}
-        <aside className="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0 overflow-y-auto overflow-x-hidden">
-          <div className="p-8 space-y-12">
+        {/* Sidebar Inspector - Estilizado */}
+        <aside className="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0 overflow-y-auto custom-scrollbar shadow-2xl z-40">
+          <div className="p-6 space-y-10">
             
             {selectedSectionIndex !== null ? (
-              <div className="space-y-10 animate-in slide-in-from-left duration-300">
+              <div className="space-y-8 animate-in slide-in-from-left duration-300">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2"><Edit3 size={14} /> Inspector</h3>
-                  <button onClick={() => setSelectedSectionIndex(null)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400"><X size={16} /></button>
+                  <button onClick={() => setSelectedSectionIndex(null)} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"><X size={14} /></button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => moveSection(selectedSectionIndex, -1)} className="py-3 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-600 text-[10px] font-black uppercase transition-all">Subir</button>
-                  <button onClick={() => moveSection(selectedSectionIndex, 1)} className="py-3 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-600 text-[10px] font-black uppercase transition-all">Bajar</button>
-                  <button onClick={() => deleteSection(selectedSectionIndex)} className="col-span-2 py-3 bg-red-50 hover:bg-red-600 text-white rounded-xl text-[10px] font-black uppercase transition-all mt-2">Eliminar Sección</button>
+                <div className="flex gap-2">
+                  <button onClick={() => moveSection(selectedSectionIndex, -1)} className="flex-1 py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-600 text-[10px] font-black uppercase transition-all">Subir</button>
+                  <button onClick={() => moveSection(selectedSectionIndex, 1)} className="flex-1 py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-600 text-[10px] font-black uppercase transition-all">Bajar</button>
+                  <button onClick={() => deleteSection(selectedSectionIndex)} className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={14}/></button>
                 </div>
 
-                <div className="pt-8 border-t border-slate-100 space-y-6">
-                   <p className="text-[10px] font-black text-slate-400 uppercase">Ajustes de Bloque</p>
-                   {/* Aquí irían controles de imagen/layout específicos si los hay */}
-                   <p className="text-xs text-slate-500 italic">Haz clic directamente en los textos de la derecha para editarlos.</p>
+                <div className="space-y-6">
+                   <p className="text-[10px] font-black text-slate-400 uppercase border-b border-slate-100 pb-2">Propiedades</p>
+                   {Object.entries(pageData.sections[selectedSectionIndex].content).map(([key, val]) => {
+                     if (['items', 'stats', 'action', 'secondaryAction', 'layout'].includes(key)) return null;
+                     return (
+                       <div key={key} className="space-y-2">
+                         <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">{key}</label>
+                         {key.toLowerCase().includes('description') || key === 'text' ? 
+                           <textarea value={val} onChange={(e) => updateSectionContent(key, e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 outline-none h-32 resize-none focus:border-indigo-600/30 transition-all" /> : 
+                           <input type="text" value={val} onChange={(e) => updateSectionContent(key, e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 outline-none focus:border-indigo-600/30 transition-all" />
+                         }
+                       </div>
+                     );
+                   })}
+
+                   {pageData.sections[selectedSectionIndex].content.items && (
+                     <div className="space-y-4">
+                        <p className="text-[10px] font-black text-slate-400 uppercase border-b border-slate-100 pb-2">Contenido Dinámico</p>
+                        {pageData.sections[selectedSectionIndex].content.items.map((item, iIdx) => (
+                          <div key={iIdx} className="p-4 bg-slate-50 rounded-2xl space-y-3 border border-slate-100">
+                             <div className="space-y-1">
+                                <label className="text-[8px] font-bold text-indigo-400 uppercase">Título/Nombre</label>
+                                <input type="text" value={item.name || item.title} onChange={(e) => updateListItem(iIdx, item.name ? 'name' : 'title', e.target.value)} className="w-full bg-transparent border-none text-[10px] font-bold uppercase outline-none text-slate-900" />
+                             </div>
+                             <div className="space-y-1">
+                                <label className="text-[8px] font-bold text-slate-400 uppercase">Valor/Descripción</label>
+                                <input type="text" value={item.price || item.description} onChange={(e) => updateListItem(iIdx, item.price ? 'price' : 'description', e.target.value)} className="w-full bg-transparent border-none text-xs outline-none text-slate-500" />
+                             </div>
+                          </div>
+                        ))}
+                     </div>
+                   )}
                 </div>
               </div>
             ) : (
               <div className="space-y-12">
                 <div className="space-y-6">
-                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-3"><Layers size={14} /> Capas</h3>
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-3"><Layers size={14} /> Capas Activas</h3>
                   <div className="space-y-2">
                     {pageData.sections.map((s, idx) => (
                       <button 
                         key={idx} 
                         onClick={() => setSelectedSectionIndex(idx)} 
-                        className={`w-full p-5 rounded-2xl border text-left transition-all flex items-center justify-between group ${selectedSectionIndex === idx ? 'border-indigo-600 bg-indigo-50/50' : 'border-slate-100 hover:border-indigo-200'}`}
+                        className={`w-full p-4 rounded-xl border text-left transition-all flex items-center justify-between group ${selectedSectionIndex === idx ? 'border-indigo-600 bg-indigo-50/50' : 'border-slate-100 hover:border-indigo-200'}`}
                       >
-                        <span className={`text-xs font-bold uppercase tracking-tight transition-colors ${selectedSectionIndex === idx ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-900'}`}>{s.type}</span>
-                        <ChevronRight size={14} className={selectedSectionIndex === idx ? 'text-indigo-600' : 'text-slate-300'} />
+                        <div className="flex items-center gap-4">
+                          <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-[8px] font-black text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">{idx + 1}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-tight text-slate-600">{s.type}</span>
+                        </div>
+                        <ChevronRight size={14} className="text-slate-300 group-hover:text-indigo-600" />
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="pt-10 border-t border-slate-100 space-y-6">
+                <div className="pt-8 border-t border-slate-100 space-y-4">
                   <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Añadir Componente</h3>
                   <div className="grid grid-cols-2 gap-2">
                     {['pitch', 'pricing', 'info', 'contact'].map(type => (
-                      <button key={type} className="py-3 border border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-500 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all">+ {type}</button>
+                      <button key={type} className="py-4 border border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all flex items-center justify-center gap-2 group"><Plus size={10} className="group-hover:scale-125 transition-all" /> {type}</button>
                     ))}
                   </div>
                 </div>
@@ -189,49 +207,63 @@ const LandingEditor = () => {
           </div>
         </aside>
 
-        {/* Live Canvas Area */}
-        <main className="flex-1 overflow-y-auto flex flex-col items-center py-20 px-10 scroll-smooth">
-          <div className="w-full max-w-5xl bg-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] rounded-[3rem] overflow-hidden border border-slate-200 relative min-h-full">
-            
-            {activeTab === 'editor' ? (
-              <div className="relative">
-                <ModularNav tenant={tenant} isEditor={true} />
-                {pageData.sections.map((s, idx) => (
-                  <TemplateRenderer 
-                    key={idx} 
-                    templateId={pageData.templateId} 
-                    section={s} 
-                    idx={idx} 
-                    isPreview={true} 
-                    isSelected={selectedSectionIndex === idx} 
-                    onSectionClick={setSelectedSectionIndex} 
-                    theme={pageData.theme} 
-                  />
-                ))}
-                <ModularFooter tenant={tenant} />
-              </div>
-            ) : (
-              <div className="max-w-2xl mx-auto py-32 px-12 space-y-20">
-                <div className="space-y-4">
-                  <h3 className="text-5xl font-bold text-slate-900 tracking-tighter">SEO & Social</h3>
-                  <p className="text-slate-500 font-medium">Define cómo se verá tu página en los buscadores.</p>
+        {/* Live Canvas Area - Escalado inteligente */}
+        <main className="flex-1 overflow-auto bg-slate-200/40 flex flex-col items-center py-12 px-6 custom-scrollbar scroll-smooth relative">
+          
+          <div 
+            className="w-full max-w-7xl transition-all duration-700 origin-top shadow-[0_60px_100px_-30px_rgba(0,0,0,0.25)] rounded-[3rem] overflow-hidden bg-white border border-slate-300 relative"
+            style={{ transform: `scale(${zoom})`, marginBottom: `${(1 - zoom) * -100}%` }}
+          >
+            {/* Browser Header Mockup */}
+            <div className="h-8 bg-slate-100 border-b border-slate-200 flex items-center px-6 gap-2 shrink-0">
+               <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+               <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+               <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+               <div className="mx-auto bg-white border border-slate-200 px-6 py-0.5 rounded-full text-[9px] font-bold text-slate-300 italic flex items-center gap-2">
+                  <Globe size={10} /> {tenant?.slug}.modular.com/{pageData.path}
+               </div>
+            </div>
+
+            <div className="relative min-h-[1200px] overflow-x-hidden">
+              {activeTab === 'editor' ? (
+                <>
+                  <ModularNav tenant={tenant} isEditor={true} />
+                  {pageData.sections.map((s, idx) => (
+                    <TemplateRenderer 
+                      key={idx} 
+                      templateId={pageData.templateId} 
+                      section={s} 
+                      idx={idx} 
+                      isPreview={true} 
+                      isSelected={selectedSectionIndex === idx} 
+                      onSectionClick={setSelectedSectionIndex} 
+                      theme={pageData.theme} 
+                    />
+                  ))}
+                  <ModularFooter tenant={tenant} />
+                </>
+              ) : (
+                <div className="max-w-2xl mx-auto py-32 px-12 space-y-20 bg-white">
+                   <div className="space-y-4">
+                      <h3 className="text-6xl font-black text-slate-900 italic uppercase tracking-tighter">SEO & Social</h3>
+                      <p className="text-slate-500 font-medium">Define cómo se verá tu página en los buscadores.</p>
+                   </div>
+                   <div className="space-y-12">
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Título SEO</label>
+                         <input type="text" value={pageData.seo.title} onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, title: e.target.value}})} className="w-full bg-slate-50 border border-slate-200 rounded-[2rem] px-8 py-6 text-xl font-bold text-slate-900 outline-none focus:ring-4 focus:ring-indigo-600/5 transition-all" />
+                      </div>
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Descripción</label>
+                         <textarea value={pageData.seo.description} onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, description: e.target.value}})} className="w-full bg-slate-50 border border-slate-200 rounded-[2rem] px-8 py-6 text-lg text-slate-600 h-60 outline-none resize-none focus:ring-4 focus:ring-indigo-600/5 transition-all" />
+                      </div>
+                   </div>
                 </div>
-                <div className="space-y-10">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Título SEO</label>
-                    <input type="text" value={pageData.seo.title} onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, title: e.target.value}})} className="w-full bg-slate-50 border border-slate-200 rounded-[2rem] px-8 py-6 text-xl font-bold text-slate-900 outline-none focus:ring-4 focus:ring-indigo-600/5 transition-all" />
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase ml-4">Descripción</label>
-                    <textarea value={pageData.seo.description} onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, description: e.target.value}})} className="w-full bg-slate-50 border border-slate-200 rounded-[2rem] px-8 py-6 text-lg text-slate-600 h-60 outline-none resize-none focus:ring-4 focus:ring-indigo-600/5 transition-all" />
-                  </div>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </main>
       </div>
-
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
     </div>
   );
