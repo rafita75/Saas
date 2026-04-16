@@ -14,10 +14,16 @@ const PublicLanding = () => {
 
   const getSlugFromHost = () => {
     const hostname = window.location.hostname;
-    if (hostname.includes('vercel.app') || hostname.includes('onrender.com')) return null;
+    // Si es un entorno de desarrollo o vercel sin subdominio real
+    if (hostname === 'localhost' || hostname.includes('vercel.app') || hostname.includes('onrender.com')) {
+       // Intentar sacar el slug de la URL si estamos en modo preview de fallback
+       const searchParams = new URLSearchParams(window.location.search);
+       return searchParams.get('tenant') || null;
+    }
+    
     const parts = hostname.split('.');
-    if (parts.length >= 3) return parts[0];
-    if (hostname.includes('localhost') && parts.length >= 2 && parts[0] !== 'localhost') return parts[0];
+    // Caso subdominio: cliente.midominio.com ->parts=['cliente', 'midominio', 'com']
+    if (parts.length >= 2) return parts[0];
     return null;
   };
 
@@ -25,20 +31,28 @@ const PublicLanding = () => {
 
   useEffect(() => {
     const fetchPublicData = async () => {
+      // Si no hay slug por subdominio, no podemos cargar nada público
       if (!publicSlug) { setLoading(false); return; }
+      
       try {
         setLoading(true);
         const [tenantRes, menuRes] = await Promise.all([
           api.get(`/tenants/public/${publicSlug}`, { headers: { 'x-tenant-slug': publicSlug } }),
           api.get(`/landings/public/menu/${publicSlug}`, { headers: { 'x-tenant-slug': publicSlug } })
         ]);
+        
         setTenant(tenantRes.data.tenant);
         setMenu(menuRes.data.landings || []);
+        
         const pathKey = urlPath || 'root';
         const pageRes = await api.get(`/landings/public/path/${pathKey}`, { headers: { 'x-tenant-slug': publicSlug } });
         setPage(pageRes.data.landing);
-      } catch (err) { setError('Página no disponible.'); }
-      finally { setLoading(false); }
+      } catch (err) { 
+        console.error("Error cargando landing pública:", err);
+        setError('Página no disponible.'); 
+      } finally { 
+        setLoading(false); 
+      }
     };
     fetchPublicData();
   }, [publicSlug, urlPath]);
@@ -48,12 +62,12 @@ const PublicLanding = () => {
   if (error || !tenant) return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-10 text-center text-white font-sans">
       <Globe className="text-indigo-600 w-40 h-40 mb-12 opacity-10" />
-      <h1 className="text-5xl font-black mb-6 uppercase italic">Offline</h1>
-      <Link to="/" className="px-12 py-6 bg-indigo-600 text-white rounded-[32px] font-black uppercase italic shadow-2xl">Ir al Inicio</Link>
+      <h1 className="text-5xl font-black mb-6 uppercase italic tracking-tighter">Site Offline</h1>
+      <p className="text-slate-500 max-w-sm mb-12 uppercase text-[10px] font-bold tracking-[0.2em]">El subdominio <span className="text-indigo-500">"{publicSlug || 'unknown'}"</span> no está configurado o no tiene una página de inicio activa.</p>
+      <Link to="/" className="px-12 py-6 bg-indigo-600 text-white rounded-[32px] font-black uppercase italic shadow-2xl hover:bg-indigo-500 transition-all">Ir al Inicio</Link>
     </div>
   );
 
-  // Selector Dinámico de Nav y Footer por Marca
   const getNavAndFooter = () => {
     switch(page?.templateId) {
       case 'lumina': return { Nav: LuminaNav, Footer: LuminaFooter };
@@ -67,7 +81,6 @@ const PublicLanding = () => {
   return (
     <div className="min-h-screen bg-white text-slate-900 selection:bg-indigo-600/20 font-sans antialiased scroll-smooth">
       <Nav tenant={tenant} menu={menu} />
-
       <main className="animate-fade-in relative z-10">
         {!page || !page.sections || page.sections.length === 0 ? (
           <div className="py-72 text-center px-8 space-y-12 bg-slate-50">
@@ -86,7 +99,6 @@ const PublicLanding = () => {
           ))
         )}
       </main>
-
       <Footer tenant={tenant} />
     </div>
   );
