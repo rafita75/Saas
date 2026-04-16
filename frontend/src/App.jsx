@@ -13,6 +13,7 @@ import { ProtectedRoute } from './core/auth/components/ProtectedRoute';
 import { AuthProvider } from './core/auth/context/AuthContext';
 import { parseSessionJSON } from './lib/cookies';
 import { getMainUrl, getAdminUrl } from './config/domains';
+import MODULES_REGISTRY from './config/modules';
 
 const ExternalRedirect = ({ to }) => {
   window.location.href = to;
@@ -91,6 +92,17 @@ function AppRoutes() {
           <Route path="dashboard" element={<DashboardHome />} />
           <Route path="team" element={<TeamSettings />} />
           <Route path="settings" element={<BusinessSettings />} />
+          
+          {/* ✅ Rutas Dinámicas de Módulos */}
+          {MODULES_REGISTRY.flatMap(module => 
+            module.routes.map((route, idx) => (
+              <Route 
+                key={`${module.id}-${idx}`} 
+                path={route.path} 
+                element={<route.element />} 
+              />
+            ))
+          )}
         </Route>
         
         <Route path="/" element={<ExternalRedirect to={`${getAdminUrl(slug)}/dashboard`} />} />
