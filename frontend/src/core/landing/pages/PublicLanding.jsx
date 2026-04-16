@@ -1,22 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../../lib/api';
-import { Sparkles, Building2, Globe, ArrowRight } from 'lucide-react';
+import { Sparkles, Building2, Globe, ArrowRight, Menu as MenuIcon, X } from 'lucide-react';
 
 const PublicLanding = () => {
-  const { publicSlug: paramSlug } = useParams();
+  const { publicSlug: paramSlug, path: urlPath } = useParams();
   const [tenant, setTenant] = useState(null);
-  const [page, setPage] = useState(null); // ✅ Cargar la página real
+  const [page, setPage] = useState(null);
+  const [menu, setMenu] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Detectar slug desde el subdominio si no viene por params
   const getSlugFromHost = () => {
     if (paramSlug) return paramSlug;
     const hostname = window.location.hostname;
     const parts = hostname.split('.');
     const isLocalhost = hostname.includes('localhost');
-    
     if (isLocalhost && parts.length >= 2 && parts[0] !== 'localhost') return parts[0];
     if (!isLocalhost && parts.length >= 3) return parts[0];
     return null;
@@ -27,12 +27,19 @@ const PublicLanding = () => {
   useEffect(() => {
     const fetchPublicData = async () => {
       try {
-        // 1. Obtener datos del tenant
-        const tenantRes = await api.get(`/tenants/public/${publicSlug}`);
+        setLoading(true);
+        // 1. Obtener datos del tenant y lista de páginas para el menú
+        const [tenantRes, menuRes] = await Promise.all([
+          api.get(`/tenants/public/${publicSlug}`),
+          api.get(`/landings/public/menu/${publicSlug}`)
+        ]);
+        
         setTenant(tenantRes.data.tenant);
+        setMenu(menuRes.data.landings || []);
 
-        // 2. Obtener la landing page principal (path: /)
-        const pageRes = await api.get(`/landings/public/path/root`);
+        // 2. Obtener la página solicitada (o root si es la principal)
+        const pathKey = urlPath || 'root';
+        const pageRes = await api.get(`/landings/public/path/${pathKey}`);
         setPage(pageRes.data.landing);
       } catch (err) {
         setError(err.response?.data?.error || 'No se pudo cargar la página');
@@ -42,11 +49,7 @@ const PublicLanding = () => {
     };
 
     if (publicSlug) fetchPublicData();
-    else {
-      setError('No se pudo identificar el negocio');
-      setLoading(false);
-    }
-  }, [publicSlug]);
+  }, [publicSlug, urlPath]);
 
   if (loading) {
     return (
@@ -71,7 +74,6 @@ const PublicLanding = () => {
     );
   }
 
-  // Renderizador de Secciones Dinámicas
   const renderSection = (section, idx) => {
     switch (section.type) {
       case 'hero':
@@ -119,7 +121,7 @@ const PublicLanding = () => {
             <div className="max-w-2xl mx-auto text-center">
               <h2 className="text-3xl font-bold mb-4 text-white">{section.content.title}</h2>
               <p className="text-slate-400 mb-12">{section.content.description}</p>
-              <div className="grid gap-4">
+              <div className="grid gap-4 max-w-sm mx-auto">
                 {section.content.email && <div className="p-4 bg-dark-800 rounded-2xl border border-white/5 text-primary font-medium">{section.content.email}</div>}
                 {section.content.phone && <div className="p-4 bg-dark-800 rounded-2xl border border-white/5 text-slate-300 font-medium">{section.content.phone}</div>}
               </div>
@@ -145,7 +147,7 @@ const PublicLanding = () => {
 
   return (
     <div className="min-h-screen bg-dark-950 text-white selection:bg-primary/30">
-      {/* Navbar */}
+      {/* Navbar Dinámico */}
       <nav className="h-20 border-b border-white/5 flex items-center justify-between px-6 lg:px-12 backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-dark-800 border border-white/10 flex items-center justify-center overflow-hidden">
@@ -157,7 +159,52 @@ const PublicLanding = () => {
           </div>
           <span className="font-bold text-xl tracking-tight">{tenant.name}</span>
         </div>
+
+        {/* Menú de escritorio */}
+        <div className="hidden md:flex items-center gap-8">
+          {menu.map((item) => (
+            <Link 
+              key={item._id} 
+              to={item.path === '/' ? '/' : `${item.path}`}
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                (urlPath === item.path.replace('/', '') || (!urlPath && item.path === '/')) 
+                ? 'text-primary' : 'text-slate-400'
+              }`}
+            >
+              {item.name}
+            </Link>
+          ))}
+          <button className="px-6 py-2 bg-primary text-white rounded-full font-medium hover:glow-effect transition-all text-sm">
+            Contactar
+          </button>
+        </div>
+
+        {/* Botón móvil */}
+        <button className="md:hidden p-2 text-slate-400" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          {mobileMenuOpen ? <X /> : <MenuIcon />}
+        </button>
       </nav>
+
+      {/* Menú móvil */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 top-20 bg-dark-950 z-40 p-6 md:hidden animate-in slide-in-from-top duration-300">
+          <div className="flex flex-col gap-6">
+            {menu.map((item) => (
+              <Link 
+                key={item._id} 
+                to={item.path === '/' ? '/' : `${item.path}`}
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-2xl font-bold text-white hover:text-primary transition-colors"
+              >
+                {item.name}
+              </Link>
+            ))}
+            <button className="w-full py-4 bg-primary text-white rounded-2xl font-bold">
+              Contactar Ahora
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Contenido Dinámico */}
       <main>

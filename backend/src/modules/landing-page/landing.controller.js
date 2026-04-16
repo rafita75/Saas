@@ -25,9 +25,12 @@ export const getLandingByPath = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, error: 'Negocio no encontrado' });
   }
 
+  // Si path es 'root', buscamos '/', si no, buscamos '/path'
+  const searchPath = (path === 'root' || !path) ? '/' : `/${path}`;
+
   const landing = await LandingPage.findOne({ 
     tenantId: tenant._id,
-    path: `/${path === 'root' ? '' : path}`,
+    path: searchPath,
     isActive: true 
   });
 
@@ -142,4 +145,21 @@ export const deleteLanding = asyncHandler(async (req, res) => {
   }
 
   res.json({ success: true, message: 'Página eliminada correctamente' });
+});
+
+/**
+ * Obtener todas las páginas de un tenant (Público)
+ */
+export const getTenantPages = asyncHandler(async (req, res) => {
+  const { publicSlug } = req.params;
+  
+  const tenant = await Tenant.findOne({ publicSlug, status: 'active' });
+  if (!tenant) return res.status(404).json({ success: false, error: 'Negocio no encontrado' });
+
+  const landings = await LandingPage.find({ 
+    tenantId: tenant._id, 
+    isActive: true 
+  }).select('name path order').sort({ order: 1 });
+
+  res.json({ success: true, landings });
 });

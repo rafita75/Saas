@@ -3,8 +3,9 @@ import { authMiddleware } from '../../core/middleware/auth.middleware.js';
 import { tenantResolver, validateTenantAccess } from '../../core/middleware/tenant.middleware.js';
 import {
   getLandings,
-  getLandingByPath, // ✅ Añadido
+  getLandingByPath,
   getLandingById,
+  getTenantPages, // ✅ Añadido
   createLanding,
   updateLanding,
   deleteLanding
@@ -14,8 +15,7 @@ const router = Router();
 
 // Rutas Públicas
 router.get('/public/path/:path', tenantResolver, getLandingByPath); 
-
-// Rutas Protegidas
+router.get('/public/menu/:publicSlug', getTenantPages); // ✅ Añadida ruta de menú
 router.use(authMiddleware, tenantResolver, validateTenantAccess);
 
 router.get('/', getLandings);

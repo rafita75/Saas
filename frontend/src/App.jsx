@@ -64,6 +64,7 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/" element={<PublicLanding />} />
+        <Route path="/:path" element={<PublicLanding />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
