@@ -16,7 +16,9 @@ export const register = asyncHandler(async (req, res) => {
   session.startTransaction();
 
   try {
-    let { fullName, businessName, email, password } = req.body;
+    // Leer de req.validData (Zod) si existe, fallback a req.body
+    const data = req.validData?.body || req.body;
+    let { fullName, businessName, email, password } = data;
     
     email = email?.trim().toLowerCase();
     
@@ -112,7 +114,9 @@ export const register = asyncHandler(async (req, res) => {
 });
 
 export const login = asyncHandler(async (req, res) => {
-  let { email, password } = req.body;
+  // Leer de req.validData (Zod) si existe, fallback a req.body
+  const data = req.validData?.body || req.body;
+  let { email, password } = data;
   
   email = email?.trim().toLowerCase();
   

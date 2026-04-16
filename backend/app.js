@@ -13,6 +13,14 @@ dotenv.config();
 
 const app = express();
 
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString()
+  });
+});
+
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -48,7 +56,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(mongoSanitize());
+// app.use(mongoSanitize());
 
 // Middleware de tenant (intenta resolver el tenant por subdominio)
 app.use(tenantResolver);

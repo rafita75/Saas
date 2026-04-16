@@ -10,20 +10,9 @@ export const validateRequest = (schema) => (req, res, next) => {
       params: req.params,
     });
 
-    // Reemplazar solo los objetos que fueron validados (y presentes en el esquema)
-    if (validatedData.body) req.body = validatedData.body;
-    
-    // Para query y params, mutamos el objeto original en lugar de reasignarlo
-    // Esto evita el error de "only a getter" al no disparar el setter de Express
-    if (validatedData.query && req.query) {
-      Object.keys(req.query).forEach(key => delete req.query[key]);
-      Object.assign(req.query, validatedData.query);
-    }
-    
-    if (validatedData.params && req.params) {
-      Object.keys(req.params).forEach(key => delete req.params[key]);
-      Object.assign(req.params, validatedData.params);
-    }
+    // ✅ La solución definitiva: NO tocar req.body, req.query o req.params nativos.
+    // Guardar los datos validados en una propiedad nueva para evitar conflictos con los getters de Express.
+    req.validData = validatedData;
 
     next();
   } catch (error) {
