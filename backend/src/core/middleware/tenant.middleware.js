@@ -8,68 +8,37 @@ export const tenantResolver = async (req, res, next) => {
   try {
     let slug = null;
 
-    // 1. PRIORIDAD MÁXIMA: Header (Para comunicación Vercel -> Render)
+    // 1. PRIORIDAD MÁXIMA: Header (Fundamental para Vercel -> Render)
     if (req.headers['x-tenant-slug']) {
       slug = req.headers['x-tenant-slug'];
     }
     
-    // 2. Prioridad: params de la URL
+    // 2. Prioridad: params de la URL (Rutas tipo /:slug/...)
     if (!slug && req.params.slug) {
       slug = req.params.slug;
     }
     
-    // 3. Subdominio (Solo si no hay nada anterior)
+    // 3. Subdominio (Fallback si no hay lo anterior)
     if (!slug) {
       const hostname = req.headers.host || '';
       const parts = hostname.split('.');
       const isLocalhost = hostname.includes('localhost');
-      const isRender = hostname.includes('onrender.com');
       
-      // No intentar extraer slug si estamos en el dominio base de Render
-      if (isLocalhost) {
-        if (parts.length >= 2 && parts[0] !== 'localhost' && parts[0] !== 'admin') {
-          slug = parts[0];
-        }
-      } else if (!isRender) {
-        // Solo en dominios personalizados (ej. tienda.jgsystemsgt.com)
-        if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'admin') {
-          slug = parts[0];
-        }
+      if (isLocalhost && parts.length >= 2 && parts[0] !== 'localhost') {
+        slug = parts[0];
+      } else if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'admin') {
+        slug = parts[0];
       }
     }
-    
-    // 3. Header
-    if (!slug) {
-      slug = req.headers['x-tenant-slug'];
-    }
-    
-    // 4. Query
-    if (!slug) {
-      slug = req.query.tenant;
-    }
-    
+
     if (slug) {
-      // ✅ Asegurar que slug sea string para prevenir NoSQL Injection
-      const slugStr = String(slug);
-      const isOfficialDomain = hostname.endsWith('jgsystemsgt.com') || hostname === 'jgsystemsgt.com';
-      const isAdminSubdomain = hostname.startsWith('admin.');
-
-      let requestedTenant = null;
-
-      // 1. Si es subdominio admin o estamos en localhost/render con slug en URL
-      // buscamos por el slug administrativo fijo.
-      if (isAdminSubdomain || (!isOfficialDomain && req.params.slug)) {
-        requestedTenant = await Tenant.findOne({ slug: slugStr, status: 'active' });
-      } else {
-        // 2. Si es subdominio directo (ej. tienda.jgsystemsgt.com)
-        // buscamos por el publicSlug.
-        requestedTenant = await Tenant.findOne({ publicSlug: slugStr, status: 'active' });
-
-        // ✅ FALLBACK: Si no lo encuentra por publicSlug, buscar por slug normal (Para negocios antiguos)
-        if (!requestedTenant) {
-          requestedTenant = await Tenant.findOne({ slug: slugStr, status: 'active' });
-        }
-      }
+      const slugStr = String(slug).toLowerCase().trim();
+      
+      // Intentar encontrar por publicSlug (Nuevo) o slug (Antiguo)
+      let requestedTenant = await Tenant.findOne({ 
+        $or: [{ publicSlug: slugStr }, { slug: slugStr }],
+        status: 'active' 
+      });
 
       if (requestedTenant) {
         req.requestedTenant = requestedTenant;
@@ -78,6 +47,7 @@ export const tenantResolver = async (req, res, next) => {
     
     next();
   } catch (error) {
+    console.error('Error en tenantResolver:', error);
     next();
   }
 };
