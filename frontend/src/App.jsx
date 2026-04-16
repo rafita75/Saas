@@ -31,44 +31,56 @@ const SlugValidator = ({ children }) => {
 function App() {
   const hostname = window.location.hostname;
   const isAdmin = hostname.startsWith('admin.');
+  const isRender = hostname.includes('onrender.com');
 
-  if (isAdmin) {
+  // En Render, permitimos entrar al dashboard desde el dominio principal
+  // En producción real, forzamos el subdominio admin.
+  if (isAdmin || isRender) {
     const tenant = parseSessionJSON('tenant', {});
     const slug = tenant.slug || '';
 
-    // Si no hay slug, redirigir al login (sesión corrupta)
-    if (!slug) {
-      return <ExternalRedirect to={`${getMainUrl()}/login`} />;
+    // Si estamos en una ruta que parece ser del dashboard (tiene slug o estamos en /dashboard)
+    // o si el usuario ya inició sesión y tiene un negocio guardado.
+    const isDashboardPath = window.location.pathname !== '/' && 
+                           window.location.pathname !== '/login' && 
+                           window.location.pathname !== '/register' &&
+                           window.location.pathname !== '/select-tenant';
+
+    if (slug && (isAdmin || isDashboardPath)) {
+      return (
+        <Routes>
+          {/* Onboarding - con slug en la URL */}
+          <Route path="/:slug/onboarding" element={
+            <ProtectedRoute>
+              <SlugValidator>
+                <SelectModules />
+              </SlugValidator>
+            </ProtectedRoute>
+          } />
+          
+          {/* Dashboard - con slug en la URL */}
+          <Route path="/:slug/*" element={
+            <ProtectedRoute>
+              <SlugValidator>
+                <DashboardLayout />
+              </SlugValidator>
+            </ProtectedRoute>
+          }>
+            <Route index element={<DashboardHome />} />
+            <Route path="dashboard" element={<DashboardHome />} />
+          </Route>
+          
+          {/* Landing routes (accesibles incluso en admin domain para comodidad) */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/select-tenant" element={<SelectTenant />} />
+          
+          {/* Redirecciones */}
+          <Route path="/" element={<ExternalRedirect to={`${getAdminUrl(slug)}/dashboard`} />} />
+          <Route path="*" element={<ExternalRedirect to={`${getMainUrl()}/login`} />} />
+        </Routes>
+      );
     }
-    
-    return (
-      <Routes>
-        {/* Onboarding - con slug en la URL */}
-        <Route path="/:slug/onboarding" element={
-          <ProtectedRoute>
-            <SlugValidator>
-              <SelectModules />
-            </SlugValidator>
-          </ProtectedRoute>
-        } />
-        
-        {/* Dashboard - con slug en la URL */}
-        <Route path="/:slug/*" element={
-          <ProtectedRoute>
-            <SlugValidator>
-              <DashboardLayout />
-            </SlugValidator>
-          </ProtectedRoute>
-        }>
-          <Route index element={<DashboardHome />} />
-          <Route path="dashboard" element={<DashboardHome />} />
-        </Route>
-        
-        {/* Redirecciones */}
-        <Route path="/" element={<ExternalRedirect to={`${getAdminUrl(slug)}/dashboard`} />} />
-        <Route path="*" element={<ExternalRedirect to={`${getMainUrl()}/login`} />} />
-      </Routes>
-    );
   }
 
   return (
@@ -77,6 +89,12 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/select-tenant" element={<SelectTenant />} />
+      {/* Fallback para capturar rutas de dashboard en dominio principal (Render) */}
+      <Route path="/:slug/*" element={
+        <ProtectedRoute>
+          <DashboardLayout />
+        </ProtectedRoute>
+      } />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

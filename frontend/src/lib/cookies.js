@@ -1,10 +1,31 @@
-// Obtener el dominio correcto según entorno
+// Obtener el dominio base dinámicamente
 const getDomain = () => {
   const hostname = window.location.hostname;
+  
+  // Localhost no soporta cookies de dominio compartido fácilmente
   if (hostname === "localhost" || hostname.includes("127.0.0.1")) {
     return null;
   }
-  return ".jgsystemsgt.com";
+
+  // Si es un subdominio de jgsystemsgt.com (producción real)
+  if (hostname.endsWith(".jgsystemsgt.com")) {
+    return ".jgsystemsgt.com";
+  }
+
+  // Evitar dominios que están en la "Public Suffix List" como onrender.com o vercel.app
+  // donde no se permite compartir cookies entre subdominios
+  const publicSuffixes = ["onrender.com", "vercel.app", "herokuapp.com", "github.io"];
+  if (publicSuffixes.some(suffix => hostname.endsWith(suffix))) {
+    return null; // Usar cookie de host (solo para este subdominio)
+  }
+
+  // Para otros entornos (ej. mi-propio-dominio.com), usar el dominio base actual
+  const parts = hostname.split(".");
+  if (parts.length >= 2) {
+    return `.${parts.slice(-2).join(".")}`;
+  }
+
+  return null;
 };
 
 // Guardar cookie accesible desde subdominios
