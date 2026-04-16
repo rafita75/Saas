@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Save, ArrowLeft, Layout, Settings, Eye, Check, ChevronRight, Type, Edit3, Globe } from 'lucide-react';
+import { Save, ArrowLeft, Layout, Settings, Eye, Check, ChevronRight, Type, Edit3, Globe, Plus, MousePointer2 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../core/auth/context/AuthContext';
 import api from '../../../lib/api';
 import { LANDING_TEMPLATES } from '../config/templates.config';
 import Toast from '../../../shared/components/Toast';
+import { SectionRenderer } from '../../../core/landing/pages/PublicLanding';
 
 const LandingEditor = () => {
   const { tenant } = useAuth();
@@ -18,7 +19,6 @@ const LandingEditor = () => {
   const [selectedSectionIndex, setSelectedSectionIndex] = useState(null);
   const [toast, setToast] = useState(null);
   
-  // Estado de la página (Defensivo)
   const [pageData, setPageData] = useState({
     name: '',
     path: '',
@@ -101,26 +101,20 @@ const LandingEditor = () => {
     const newSections = [...pageData.sections];
     const newIndex = index + direction;
     if (newIndex < 0 || newIndex >= newSections.length) return;
-    
     [newSections[index], newSections[newIndex]] = [newSections[newIndex], newSections[index]];
-    
-    // Actualizar el orden numérico
     newSections.forEach((s, i) => s.order = i);
-    
     setPageData({ ...pageData, sections: newSections });
     setSelectedSectionIndex(newIndex);
   };
 
   const addExtraSection = (type) => {
-    // Validar límite de plan gratis (1 sección extra sobre la plantilla base)
-    // Asumimos que la plantilla base tiene 3 secciones (según las nuevas configs)
-    if (isFreePlan && pageData.sections.length >= 4) {
-      setToast({ message: 'Límite alcanzado. Mejora al Plan Pro para secciones ilimitadas.', type: 'warning' });
+    if (subscription?.planId?.slug === 'gratis' && pageData.sections.length >= 4) {
+      setToast({ message: 'Límite alcanzado. Mejora al Plan Pro para más bloques.', type: 'warning' });
       return;
     }
 
     const defaultContent = {
-      hero: { title: 'Nuevo Título', description: 'Nueva descripción', ctaText: 'Botón', image: '' },
+      hero: { layout: 'split', title: 'Nuevo Título', description: 'Nueva descripción', ctaText: 'Botón', image: '' },
       features: { title: 'Características', items: [{ title: 'Item 1', description: 'Desc...' }] },
       contact: { title: 'Contacto', description: 'Escríbenos', email: 'test@mail.com' },
       cta: { title: 'Llamada a la acción', description: 'Únete hoy', buttonText: 'Click aquí' },
@@ -135,7 +129,7 @@ const LandingEditor = () => {
     };
 
     setPageData({ ...pageData, sections: [...pageData.sections, newSection] });
-    setToast({ message: 'Sección añadida. ¡Ahora puedes editarla!', type: 'success' });
+    setToast({ message: 'Sección añadida.', type: 'success' });
   };
 
   if (loading && !pageData.name && isNew) {
@@ -146,17 +140,14 @@ const LandingEditor = () => {
     );
   }
 
-  // PANTALLA 1: SELECTOR DE PLANTILLA (Si es nueva y no hay secciones)
   if (isNew && pageData.sections.length === 0) {
     return (
       <div className="space-y-12 animate-fade-in p-8">
         <div className="flex items-center gap-4">
-          <Link to={`/${tenant?.slug}/landings`} className="p-2 bg-dark-800 border border-white/5 rounded-xl text-slate-400 hover:text-white transition-all">
-            <ArrowLeft size={20} />
-          </Link>
+          <Link to={`/${tenant?.slug}/landings`} className="p-2 bg-dark-800 border border-white/5 rounded-xl text-slate-400 hover:text-white transition-all"><ArrowLeft size={20} /></Link>
           <div>
             <h2 className="text-3xl font-black text-white tracking-tight">Nueva Página</h2>
-            <p className="text-slate-500">Selecciona una plantilla para comenzar a trabajar.</p>
+            <p className="text-slate-500">Selecciona una plantilla para comenzar.</p>
           </div>
         </div>
 
@@ -164,24 +155,26 @@ const LandingEditor = () => {
           {LANDING_TEMPLATES.map((template) => (
             <div key={template.id} className="glass rounded-[40px] border border-white/5 overflow-hidden group hover:border-primary/50 transition-all flex flex-col">
               <div className="aspect-video bg-dark-800 relative flex items-center justify-center">
-                <Globe size={48} className="text-slate-700 group-hover:text-primary/20 transition-all" />
+                <div className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity">
+                   {/* Aquí simulamos una miniatura basada en el layout del hero */}
+                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
+                      <Layout size={48} className="text-white/20" />
+                   </div>
+                </div>
                 <div className="absolute inset-0 bg-dark-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-6">
-                  <button onClick={() => selectTemplate(template)} className="bg-primary text-white px-8 py-3 rounded-2xl font-bold flex items-center gap-2 hover:scale-105 transition-all">
-                    Usar Plantilla <ChevronRight size={18} />
-                  </button>
+                  <button onClick={() => selectTemplate(template)} className="bg-primary text-white px-8 py-3 rounded-2xl font-bold flex items-center gap-2 hover:scale-105 transition-all">Usar Plantilla <ChevronRight size={18} /></button>
                 </div>
               </div>
               <div className="p-8">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-white">{template.name}</h3>
-                  <span className="bg-primary/10 text-primary text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-primary/20">Gratis</span>
+                  <span className="bg-primary/10 text-primary text-[10px] px-3 py-1 rounded-full font-black uppercase border border-primary/20">Gratis</span>
                 </div>
                 <p className="text-slate-400 text-sm leading-relaxed">{template.description}</p>
               </div>
             </div>
           ))}
         </div>
-        {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       </div>
     );
   }
@@ -191,141 +184,64 @@ const LandingEditor = () => {
 
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col gap-6 animate-fade-in">
-      {/* HEADER DEL EDITOR */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => isNew ? setPageData({...pageData, sections: []}) : navigate(`/${tenant?.slug}/landings`)} className="p-2 bg-dark-800 border border-white/5 rounded-xl text-slate-400 hover:text-white transition-all">
-            <ArrowLeft size={20} />
-          </button>
+          <button onClick={() => isNew ? setPageData({...pageData, sections: []}) : navigate(`/${tenant?.slug}/landings`)} className="p-2 bg-dark-800 border border-white/5 rounded-xl text-slate-400 hover:text-white transition-all"><ArrowLeft size={20} /></button>
           <div>
-            <input 
-              type="text" 
-              value={pageData.name} 
-              onChange={(e) => setPageData({...pageData, name: e.target.value})}
-              className="bg-transparent text-xl font-bold text-white outline-none border-b border-transparent focus:border-primary/50 transition-all"
-              placeholder="Nombre de la página..."
-            />
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">
-              Plan: <span className="text-primary">{subscription?.planId?.name || 'Cargando...'}</span>
-            </p>
+            <input type="text" value={pageData.name} onChange={(e) => setPageData({...pageData, name: e.target.value})} className="bg-transparent text-xl font-bold text-white outline-none border-b border-transparent focus:border-primary/50" placeholder="Nombre de la página..." />
+            <p className="text-slate-500 text-[10px] font-black uppercase mt-1">Plan: <span className="text-primary">{subscription?.planId?.name || 'Cargando...'}</span></p>
           </div>
         </div>
-
         <div className="flex items-center gap-3">
           <div className="flex bg-dark-900/50 p-1 rounded-2xl border border-white/5 backdrop-blur-xl">
-            {[
-              { id: 'editor', label: 'Editor', icon: Layout },
-              { id: 'settings', label: 'SEO', icon: Settings },
-            ].map(tab => (
-              <button 
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === tab.id ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-slate-200'}`}
-              >
-                <tab.icon size={14} /> {tab.label}
-              </button>
+            {[{ id: 'editor', label: 'Editor', icon: Layout }, { id: 'settings', label: 'SEO', icon: Settings }].map(tab => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === tab.id ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-200'}`}><tab.icon size={14} /> {tab.label}</button>
             ))}
           </div>
-
-          <button onClick={handleSave} className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all">
-            <Save size={18} /> {isNew ? 'Publicar' : 'Actualizar'}
-          </button>
+          <button onClick={handleSave} className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-2.5 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20"><Save size={18} /> {isNew ? 'Publicar' : 'Actualizar'}</button>
         </div>
       </div>
 
-      {/* ÁREA DE TRABAJO */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-hidden">
-        {/* PANEL LATERAL DE EDICIÓN */}
         <div className="lg:col-span-1 glass rounded-[32px] border border-white/5 p-6 flex flex-col gap-6 overflow-y-auto">
           {isFreePlan ? (
             <div className="space-y-8">
-              <div className="p-5 bg-primary/10 border border-primary/20 rounded-3xl">
-                <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2">Restricciones de Plan</p>
-                <p className="text-xs text-slate-300 leading-relaxed">En el Plan Gratis puedes editar los textos e imágenes de la plantilla. El diseño y orden son fijos.</p>
-              </div>
-              
               {selectedSection ? (
-                <div className="space-y-6 animate-in slide-in-from-left duration-300">
+                <div className="space-y-6 animate-in slide-in-from-left">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
-                      <Edit3 size={14} className="text-primary" /> Editando: {selectedSection.type}
-                    </h3>
+                    <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2"><Edit3 size={14} className="text-primary" /> Editando: {selectedSection.type}</h3>
                     <button onClick={() => setSelectedSectionIndex(null)} className="text-slate-500 hover:text-white text-[10px] uppercase font-bold">Cerrar</button>
                   </div>
-
-                  {/* Controles de Movimiento */}
                   <div className="flex gap-2">
-                    <button 
-                      onClick={() => moveSection(selectedSectionIndex, -1)}
-                      disabled={selectedSectionIndex === 0}
-                      className="flex-1 py-2 bg-dark-800 border border-white/5 rounded-xl text-slate-400 hover:text-white disabled:opacity-30 transition-all flex items-center justify-center gap-2 text-[10px] font-bold uppercase"
-                    >
-                      Subir
-                    </button>
-                    <button 
-                      onClick={() => moveSection(selectedSectionIndex, 1)}
-                      disabled={selectedSectionIndex === pageData.sections.length - 1}
-                      className="flex-1 py-2 bg-dark-800 border border-white/5 rounded-xl text-slate-400 hover:text-white disabled:opacity-30 transition-all flex items-center justify-center gap-2 text-[10px] font-bold uppercase"
-                    >
-                      Bajar
-                    </button>
+                    <button onClick={() => moveSection(selectedSectionIndex, -1)} disabled={selectedSectionIndex === 0} className="flex-1 py-2 bg-dark-800 border border-white/5 rounded-xl text-slate-400 hover:text-white disabled:opacity-30 text-[10px] font-bold">Subir</button>
+                    <button onClick={() => moveSection(selectedSectionIndex, 1)} disabled={selectedSectionIndex === pageData.sections.length - 1} className="flex-1 py-2 bg-dark-800 border border-white/5 rounded-xl text-slate-400 hover:text-white disabled:opacity-30 text-[10px] font-bold">Bajar</button>
                   </div>
-
                   <div className="space-y-5">
-                    {/* Campos de Texto/Imagen */}
                     {Object.keys(selectedSection.content).map((key) => {
-                      if (key === 'items' || key === 'ctaText' || key === 'buttonText' || key === 'action') return null;
+                      if (['items', 'ctaText', 'buttonText', 'action', 'layout'].includes(key)) return null;
                       const val = selectedSection.content[key];
                       return (
                         <div key={key} className="space-y-2">
                           <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">{key}</label>
-                          {key.toLowerCase().includes('description') ? (
-                            <textarea 
-                              value={val}
-                              onChange={(e) => updateSectionContent(key, e.target.value)}
-                              className="w-full bg-dark-800 border border-slate-700 rounded-2xl px-4 py-3 text-xs text-slate-300 focus:ring-2 focus:ring-primary/40 outline-none h-32 resize-none transition-all"
-                            />
-                          ) : (
-                            <input 
-                              type="text" 
-                              value={val}
-                              onChange={(e) => updateSectionContent(key, e.target.value)}
-                              className="w-full bg-dark-800 border border-slate-700 rounded-2xl px-4 py-3 text-xs text-slate-300 focus:ring-2 focus:ring-primary/40 outline-none transition-all"
-                            />
-                          )}
+                          {key.toLowerCase().includes('description') ? 
+                            <textarea value={val} onChange={(e) => updateSectionContent(key, e.target.value)} className="w-full bg-dark-800 border border-slate-700 rounded-2xl px-4 py-3 text-xs text-slate-300 outline-none h-32 resize-none" /> :
+                            <input type="text" value={val} onChange={(e) => updateSectionContent(key, e.target.value)} className="w-full bg-dark-800 border border-slate-700 rounded-2xl px-4 py-3 text-xs text-slate-300 outline-none" />
+                          }
                         </div>
                       );
                     })}
-
-                    {/* Configuración de Botón de Acción (Si aplica) */}
                     {(selectedSection.content.ctaText || selectedSection.content.buttonText) && (
                       <div className="pt-4 border-t border-white/5 space-y-4">
                         <h4 className="text-[10px] font-black text-primary uppercase tracking-widest">Configurar Botón</h4>
                         <div className="space-y-3">
-                          <input 
-                            type="text"
-                            value={selectedSection.content.ctaText || selectedSection.content.buttonText}
-                            onChange={(e) => updateSectionContent(selectedSection.content.ctaText ? 'ctaText' : 'buttonText', e.target.value)}
-                            className="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
-                            placeholder="Texto del botón"
-                          />
-                          <select 
-                            value={selectedSection.content.action?.type || 'link'}
-                            onChange={(e) => updateSectionContent('action', { ...selectedSection.content.action, type: e.target.value })}
-                            className="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
-                          >
-                            <option value="link">Enlace Interno</option>
+                          <input type="text" value={selectedSection.content.ctaText || selectedSection.content.buttonText} onChange={(e) => updateSectionContent(selectedSection.content.ctaText ? 'ctaText' : 'buttonText', e.target.value)} className="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" placeholder="Texto del botón" />
+                          <select value={selectedSection.content.action?.type || 'link'} onChange={(e) => updateSectionContent('action', { ...selectedSection.content.action, type: e.target.value })} className="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                            <option value="link">Enlace (ID: #ancla o URL)</option>
                             <option value="whatsapp">WhatsApp</option>
                             <option value="phone">Llamada</option>
                             <option value="email">Email</option>
                           </select>
-                          <input 
-                            type="text"
-                            value={selectedSection.content.action?.value || ''}
-                            onChange={(e) => updateSectionContent('action', { ...selectedSection.content.action, value: e.target.value })}
-                            className="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono"
-                            placeholder={selectedSection.content.action?.type === 'whatsapp' ? 'Número con código' : 'Valor del enlace'}
-                          />
+                          <input type="text" value={selectedSection.content.action?.value || ''} onChange={(e) => updateSectionContent('action', { ...selectedSection.content.action, value: e.target.value })} className="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono" placeholder="Valor del enlace o ID" />
                         </div>
                       </div>
                     )}
@@ -333,35 +249,22 @@ const LandingEditor = () => {
                 </div>
               ) : (
                 <div className="space-y-8">
-                  {/* Lista de Secciones Actuales */}
                   <div className="space-y-4">
-                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                      <Type size={14} /> Secciones en página
-                    </h3>
+                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><Type size={14} /> Secciones</h3>
                     <div className="space-y-2">
                       {pageData.sections.map((section, idx) => (
-                        <button key={idx} onClick={() => setSelectedSectionIndex(idx)} className="w-full p-4 bg-dark-800 border border-white/5 rounded-2xl text-xs text-slate-400 flex items-center justify-between hover:border-primary/40 hover:text-white transition-all group">
+                        <button key={idx} onClick={() => setSelectedSectionIndex(idx)} className="w-full p-4 bg-dark-800 border border-white/5 rounded-2xl text-xs text-slate-400 flex items-center justify-between hover:text-white transition-all group">
                           <span className="capitalize font-bold">{section.type}</span>
                           <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
                         </button>
                       ))}
                     </div>
                   </div>
-
-                  {/* Añadir Sección Extra (Limitado) */}
                   <div className="pt-6 border-t border-white/5 space-y-4">
-                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Añadir Bloque Extra</h3>
-                    <p className="text-[10px] text-slate-600 italic">Puedes añadir 1 bloque adicional en el Plan Gratis.</p>
+                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest text-center">Añadir Bloque (+1 Gratis)</h3>
                     <div className="grid grid-cols-2 gap-2">
                       {['cta', 'testimonials', 'features', 'contact'].map(type => (
-                        <button 
-                          key={type}
-                          onClick={() => addExtraSection(type)}
-                          disabled={pageData.sections.length >= 4}
-                          className="p-3 bg-dark-800 border border-white/5 rounded-xl text-[10px] font-bold text-slate-400 hover:border-primary/50 hover:text-white transition-all disabled:opacity-20"
-                        >
-                          + {type.toUpperCase()}
-                        </button>
+                        <button key={type} onClick={() => addExtraSection(type)} disabled={pageData.sections.length >= 4} className="p-3 bg-dark-800 border border-white/5 rounded-xl text-[10px] font-bold text-slate-400 hover:border-primary/50 hover:text-white disabled:opacity-20 capitalize">{type}</button>
                       ))}
                     </div>
                   </div>
@@ -369,84 +272,33 @@ const LandingEditor = () => {
               )}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-center p-8">
-              <p className="text-slate-600 text-sm italic font-medium">Constructor avanzado en desarrollo para planes Pro.</p>
-            </div>
+            <div className="flex items-center justify-center h-full text-center p-8 text-slate-600 italic">Constructor avanzado Pro.</div>
           )}
         </div>
 
-        {/* LIENZO DEL EDITOR (CANVAS) */}
         <div className="lg:col-span-3 glass rounded-[32px] border border-white/5 bg-dark-900/30 overflow-y-auto">
           {activeTab === 'editor' && (
-            <div className="p-12 space-y-16">
-              {pageData.sections.length === 0 && (
-                <div className="py-40 text-center space-y-4">
-                  <Layout size={64} className="mx-auto text-slate-800" />
-                  <p className="text-slate-600 font-medium tracking-tight">Tu página está vacía. Selecciona una plantilla para empezar.</p>
-                </div>
-              )}
+            <div className="p-8 space-y-12">
+              {pageData.sections.length === 0 && <div className="py-40 text-center text-slate-600">Página vacía. Elige una plantilla.</div>}
               {pageData.sections.map((section, idx) => (
-                <div 
-                  key={idx} 
-                  onClick={() => setSelectedSectionIndex(idx)}
-                  className={`relative group rounded-[40px] border transition-all duration-500 ${
-                    selectedSectionIndex === idx 
-                      ? 'border-primary shadow-[0_0_50px_-20px_rgba(99,102,241,0.6)] ring-8 ring-primary/5 bg-dark-800/40' 
-                      : 'border-transparent hover:border-white/10 hover:bg-white/[0.02]'
-                  } cursor-pointer`}
-                >
-                  <div className="p-12 text-center">
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-6 opacity-40">Bloque: {section.type}</p>
-                    <h4 className="text-4xl font-black text-white mb-6 tracking-tight leading-tight max-w-2xl mx-auto">
-                      {section.content.title || 'Título de sección'}
-                    </h4>
-                    <p className="text-slate-400 text-base max-w-xl mx-auto leading-relaxed">
-                      {section.content.description || 'Descripción de la sección...'}
-                    </p>
-                    {section.content.image && (
-                      <div className="mt-12 w-full max-w-xl mx-auto aspect-video rounded-[40px] bg-dark-800 flex items-center justify-center overflow-hidden border border-white/5 shadow-2xl">
-                        <img src={section.content.image} className="w-full h-full object-cover" alt="preview" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Indicador visual de selección */}
-                  {selectedSectionIndex === idx && (
-                    <div className="absolute top-6 right-6 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white shadow-lg animate-scale-up">
-                      <Check size={16} strokeWidth={3} />
-                    </div>
-                  )}
-                </div>
+                <SectionRenderer 
+                  key={idx} section={section} idx={idx} isPreview={true}
+                  isSelected={selectedSectionIndex === idx} onSectionClick={setSelectedSectionIndex} 
+                />
               ))}
             </div>
           )}
-
           {activeTab === 'settings' && (
-            <div className="max-w-2xl mx-auto py-24 px-8 space-y-12">
-              <div className="space-y-2">
-                <h3 className="text-3xl font-black text-white tracking-tighter">Posicionamiento SEO</h3>
-                <p className="text-slate-500 text-sm">Configura cómo aparecerá tu página en Google y redes sociales.</p>
-              </div>
-
-              <div className="space-y-8">
-                <div className="space-y-3">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Título de Navegación</label>
-                  <input 
-                    type="text" 
-                    value={pageData.seo.title}
-                    onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, title: e.target.value}})}
-                    className="w-full bg-dark-800 border border-slate-700 rounded-[24px] px-6 py-4 text-white focus:ring-4 focus:ring-primary/20 outline-none transition-all" 
-                    placeholder="Ej: Inicio | Mi Negocio" 
-                  />
+            <div className="max-w-2xl mx-auto py-20 px-8 space-y-8">
+              <h3 className="text-2xl font-black text-white">SEO Settings</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase">Título Pestaña</label>
+                  <input type="text" value={pageData.seo.title} onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, title: e.target.value}})} className="w-full bg-dark-800 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none" />
                 </div>
-                <div className="space-y-3">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Descripción corta (Meta)</label>
-                  <textarea 
-                    value={pageData.seo.description}
-                    onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, description: e.target.value}})}
-                    className="w-full bg-dark-800 border border-slate-700 rounded-[24px] px-6 py-4 text-white h-48 focus:ring-4 focus:ring-primary/20 outline-none resize-none transition-all text-sm leading-relaxed" 
-                    placeholder="Escribe un resumen atractivo para tus clientes..." 
-                  />
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase">Meta Descripción</label>
+                  <textarea value={pageData.seo.description} onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, description: e.target.value}})} className="w-full bg-dark-800 border border-slate-700 rounded-xl px-4 py-3 text-white h-32 outline-none" />
                 </div>
               </div>
             </div>

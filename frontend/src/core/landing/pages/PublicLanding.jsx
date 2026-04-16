@@ -3,6 +3,180 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../../../lib/api';
 import { Sparkles, Building2, Globe, ArrowRight, Menu as MenuIcon, X } from 'lucide-react';
 
+/**
+ * Componente que renderiza una sección específica basada en su tipo y contenido.
+ * Se usa tanto en el Editor como en la Vista Pública para garantizar consistencia total.
+ */
+export const SectionRenderer = ({ section, idx, isPreview = false, onSectionClick, isSelected = false }) => {
+  if (!section || !section.content) return null;
+  
+  const sectionId = section.id || (section.content.title ? section.content.title.toLowerCase().replace(/\s+/g, '-') : `${section.type}-${idx}`);
+  const { layout = 'split' } = section.content;
+
+  const handleAction = (action) => {
+    if (isPreview) return; // No ejecutar acciones en el editor
+    if (!action || !action.value) return;
+    
+    switch (action.type) {
+      case 'whatsapp':
+        window.open(`https://wa.me/${action.value.replace(/\D/g, '')}`, '_blank');
+        break;
+      case 'phone':
+        window.location.href = `tel:${action.value}`;
+        break;
+      case 'email':
+        window.location.href = `mailto:${action.value}`;
+        break;
+      case 'link':
+        if (action.value.startsWith('#')) {
+          const el = document.getElementById(action.value.substring(1));
+          el?.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.open(action.value, '_blank');
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
+  const containerClass = `relative scroll-mt-24 transition-all duration-500 ${isPreview ? 'cursor-pointer rounded-[40px] border-2' : ''} ${
+    isSelected ? 'border-primary shadow-[0_0_50px_-20px_rgba(99,102,241,0.6)] ring-8 ring-primary/5 bg-dark-800/40' : 'border-transparent'
+  }`;
+
+  const renderContent = () => {
+    switch (section.type) {
+      case 'hero':
+        if (layout === 'centered') {
+          return (
+            <div className="max-w-4xl mx-auto text-center py-20 lg:py-32">
+              <h1 className="text-5xl md:text-8xl font-black mb-8 leading-tight tracking-tighter italic text-white uppercase">{section.content.title}</h1>
+              <p className="text-slate-400 text-lg md:text-2xl mb-12 max-w-2xl mx-auto">{section.content.description}</p>
+              {section.content.ctaText && (
+                <button onClick={() => handleAction(section.content.action)} className="px-12 py-5 bg-primary text-white rounded-full font-black text-lg hover:glow-effect transition-all uppercase tracking-widest">
+                  {section.content.ctaText}
+                </button>
+              )}
+            </div>
+          );
+        }
+        if (layout === 'background') {
+          return (
+            <div className="relative min-h-[70vh] flex items-center justify-center py-20 px-6">
+              <div className="absolute inset-0 z-0">
+                <img src={section.content.image} className="w-full h-full object-cover" alt="BG" />
+                <div className="absolute inset-0 bg-dark-950/70 backdrop-blur-[2px]" />
+              </div>
+              <div className="max-w-5xl mx-auto text-center relative z-10">
+                <h1 className="text-5xl md:text-8xl font-black mb-8 leading-none text-white tracking-tight italic">{section.content.title}</h1>
+                <p className="text-slate-200 text-lg md:text-2xl mb-12 max-w-2xl mx-auto leading-relaxed">{section.content.description}</p>
+                <button onClick={() => handleAction(section.content.action)} className="px-12 py-5 bg-white text-black rounded-2xl font-black text-lg hover:scale-105 transition-all">
+                  {section.content.ctaText || 'Comenzar'}
+                </button>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center py-20 lg:py-32 px-6">
+            <div className="space-y-8 text-left">
+              <h1 className="text-5xl md:text-7xl font-black leading-tight text-white tracking-tighter italic uppercase">{section.content.title}</h1>
+              <p className="text-slate-400 text-lg md:text-xl leading-relaxed max-w-lg">{section.content.description}</p>
+              <button onClick={() => handleAction(section.content.action)} className="px-10 py-5 bg-primary text-white rounded-[24px] font-black text-lg hover:glow-effect transition-all flex items-center gap-4">
+                {section.content.ctaText} <ArrowRight />
+              </button>
+            </div>
+            <div className="relative aspect-square rounded-[50px] overflow-hidden border border-white/10 shadow-2xl">
+              <img src={section.content.image} alt="Hero" className="w-full h-full object-cover" />
+            </div>
+          </div>
+        );
+
+      case 'features':
+        return (
+          <div className="max-w-7xl mx-auto py-24 px-6">
+            <h2 className="text-4xl font-black text-center mb-16 text-white tracking-tight">{section.content.title || '¿Por qué nosotros?'}</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {section.content.items?.map((item, i) => (
+                <div key={i} className="p-10 rounded-[40px] bg-dark-800 border border-white/5 hover:border-primary/40 transition-all">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 text-primary"><Sparkles size={24} /></div>
+                  <h4 className="text-xl font-bold text-white mb-4">{item.title}</h4>
+                  <p className="text-slate-400 text-sm leading-relaxed">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'contact':
+        return (
+          <div className="max-w-4xl mx-auto py-24 px-6">
+            <div className="glass rounded-[48px] p-12 lg:p-20 border border-white/5 text-center">
+              <h2 className="text-4xl font-black mb-6 text-white tracking-tight">{section.content.title}</h2>
+              <p className="text-slate-400 text-lg mb-12 max-w-2xl mx-auto">{section.content.description}</p>
+              <div className="flex flex-wrap items-center justify-center gap-8">
+                {section.content.email && (
+                  <button onClick={() => handleAction({ type: 'email', value: section.content.email })} className="flex flex-col items-center gap-2">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Email</p>
+                    <p className="text-xl font-bold text-primary">{section.content.email}</p>
+                  </button>
+                )}
+                {section.content.phone && (
+                  <button onClick={() => handleAction({ type: 'phone', value: section.content.phone })} className="flex flex-col items-center gap-2">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Teléfono</p>
+                    <p className="text-xl font-bold text-white">{section.content.phone}</p>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'testimonials':
+        return (
+          <div className="max-w-7xl mx-auto py-24 px-6 text-center">
+            <h2 className="text-4xl font-black mb-16 text-white tracking-tight">{section.content.title || 'Opiniones'}</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {section.content.items?.map((item, i) => (
+                <div key={i} className="p-8 rounded-[40px] bg-dark-900 border border-white/5 italic text-slate-400">
+                  <p className="mb-6">"{item.description}"</p>
+                  <p className="font-bold text-white not-italic">— {item.title}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+        
+      case 'cta':
+        return (
+          <div className="max-w-5xl mx-auto py-20 px-6">
+            <div className="p-16 rounded-[48px] bg-primary text-center space-y-8 shadow-[0_0_50px_-15px_rgba(99,102,241,0.5)]">
+              <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">{section.content.title}</h2>
+              <p className="text-indigo-100 text-lg max-w-2xl mx-auto">{section.content.description}</p>
+              <button onClick={() => handleAction(section.content.action)} className="px-10 py-4 bg-white text-primary rounded-2xl font-black text-lg hover:scale-105 transition-all">
+                {section.content.buttonText || 'Comenzar ahora'}
+              </button>
+            </div>
+          </div>
+        );
+
+      default:
+        return <div className="p-10 text-center text-slate-600 border border-dashed border-slate-800 rounded-3xl">Bloque {section.type} no implementado.</div>;
+    }
+  };
+
+  return (
+    <section id={sectionId} className={containerClass} onClick={() => onSectionClick?.(idx)}>
+      {renderContent()}
+      {isPreview && isSelected && (
+        <div className="absolute top-4 right-4 bg-primary text-white p-2 rounded-full shadow-lg animate-scale-up">
+          <Check size={16} strokeWidth={3} />
+        </div>
+      )}
+    </section>
+  );
+};
+
 const PublicLanding = () => {
   const { path: urlPath } = useParams();
   const [tenant, setTenant] = useState(null);
@@ -12,19 +186,15 @@ const PublicLanding = () => {
   const [error, setError] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Detectar slug desde el subdominio
   const getSlugFromHost = () => {
     const hostname = window.location.hostname;
     const parts = hostname.split('.');
     const isLocalhost = hostname.includes('localhost');
     const isVercel = hostname.includes('vercel.app');
     const isRender = hostname.includes('onrender.com');
-    
     if (isVercel || isRender) return null;
-
     if (!isLocalhost && parts.length >= 3) return parts[0];
     if (isLocalhost && parts.length >= 2 && parts[0] !== 'localhost') return parts[0];
-    
     return null;
   };
 
@@ -33,319 +203,78 @@ const PublicLanding = () => {
   useEffect(() => {
     const fetchPublicData = async () => {
       if (!publicSlug) {
-        setError('No se pudo identificar el negocio desde la URL.');
         setLoading(false);
         return;
       }
-
       try {
         setLoading(true);
-        // 1. Obtener datos del negocio
-        const tenantRes = await api.get(`/tenants/public/${publicSlug}`, {
-          headers: { 'x-tenant-slug': publicSlug }
-        });
+        const [tenantRes, menuRes] = await Promise.all([
+          api.get(`/tenants/public/${publicSlug}`, { headers: { 'x-tenant-slug': publicSlug } }),
+          api.get(`/landings/public/menu/${publicSlug}`, { headers: { 'x-tenant-slug': publicSlug } })
+        ]);
         setTenant(tenantRes.data.tenant);
-
-        // 2. Obtener lista de páginas para el Navbar
-        const menuRes = await api.get(`/landings/public/menu/${publicSlug}`, {
-          headers: { 'x-tenant-slug': publicSlug }
-        });
         setMenu(menuRes.data.landings || []);
 
-        // 3. Obtener el contenido de la página actual
         const pathKey = urlPath || 'root';
-        const pageRes = await api.get(`/landings/public/path/${pathKey}`, {
-          headers: { 'x-tenant-slug': publicSlug }
-        });
+        const pageRes = await api.get(`/landings/public/path/${pathKey}`, { headers: { 'x-tenant-slug': publicSlug } });
         setPage(pageRes.data.landing);
       } catch (err) {
-        console.error('Error fetching public data:', err);
-        setError(err.response?.data?.error || 'Página no disponible en este momento.');
+        setError(err.response?.data?.error || 'Página no disponible.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchPublicData();
   }, [publicSlug, urlPath]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+    </div>
+  );
 
-  if (error || !tenant) {
-    return (
-      <div className="min-h-screen bg-dark-950 flex flex-col items-center justify-center p-4 text-center">
-        <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6 border border-red-500/20">
-          <Globe className="text-red-400 w-10 h-10" />
-        </div>
-        <h1 className="text-2xl font-bold text-white mb-2">Página no disponible</h1>
-        <p className="text-slate-400 max-w-md mb-8">{error}</p>
-        <a href="https://jgsystemsgt.com" className="px-8 py-3 bg-primary text-white rounded-2xl font-bold hover:glow-effect transition-all">
-          Ir a ModularBusiness
-        </a>
-      </div>
-    );
-  }
-
-  const renderSection = (section, idx) => {
-    if (!section || !section.content) return null;
-    
-    const sectionId = section.content.title ? section.content.title.toLowerCase().replace(/\s+/g, '-') : `${section.type}-${idx}`;
-    const { layout = 'split' } = section.content; // 'split', 'centered', 'background'
-
-    const handleAction = (action) => {
-      if (!action || !action.value) return;
-      // ... (lógica de acciones se mantiene igual)
-    };
-
-    switch (section.type) {
-      case 'hero':
-        if (layout === 'centered') {
-          return (
-            <section id={sectionId} key={idx} className="relative pt-32 pb-40 px-6 text-center scroll-mt-24 overflow-hidden">
-              <div className="max-w-4xl mx-auto relative z-10">
-                <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight tracking-tighter italic text-white uppercase">{section.content.title}</h1>
-                <p className="text-slate-400 text-xl md:text-2xl mb-12 max-w-2xl mx-auto leading-relaxed">{section.content.description}</p>
-                {section.content.ctaText && (
-                  <button onClick={() => handleAction(section.content.action)} className="px-12 py-5 bg-primary text-white rounded-full font-black text-lg hover:glow-effect transition-all uppercase tracking-widest">
-                    {section.content.ctaText}
-                  </button>
-                )}
-              </div>
-              {/* Decoración Minimalista */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-20 pointer-events-none">
-                <div className="absolute top-0 left-0 w-96 h-96 bg-primary/20 blur-[150px]" />
-              </div>
-            </section>
-          );
-        }
-
-        if (layout === 'background') {
-          return (
-            <section id={sectionId} key={idx} className="relative min-h-[90vh] flex items-center justify-center px-6 scroll-mt-24 overflow-hidden">
-              {/* Imagen de fondo completa */}
-              <div className="absolute inset-0 z-0">
-                <img src={section.content.image} className="w-full h-full object-cover" alt="Background" />
-                <div className="absolute inset-0 bg-dark-950/70 backdrop-blur-[2px]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent" />
-              </div>
-              
-              <div className="max-w-5xl mx-auto text-center relative z-10">
-                <h1 className="text-6xl md:text-9xl font-black mb-8 leading-none text-white tracking-tight italic drop-shadow-2xl">
-                  {section.content.title}
-                </h1>
-                <p className="text-slate-200 text-xl md:text-3xl mb-12 max-w-3xl mx-auto leading-relaxed font-medium drop-shadow-lg">
-                  {section.content.description}
-                </p>
-                <button onClick={() => handleAction(section.content.action)} className="px-16 py-6 bg-white text-black rounded-2xl font-black text-xl hover:scale-105 transition-all shadow-2xl">
-                  {section.content.ctaText || 'Descubrir'}
-                </button>
-              </div>
-            </section>
-          );
-        }
-
-        // Default: Layout 'split' (Llamativo/Moderno)
-        return (
-          <section id={sectionId} key={idx} className="relative pt-24 pb-32 px-8 lg:px-16 scroll-mt-24">
-            <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
-              <div className="space-y-10 text-left">
-                <h1 className="text-6xl md:text-8xl font-black leading-[0.9] text-white tracking-tighter italic uppercase">
-                  {section.content.title}
-                </h1>
-                <p className="text-slate-400 text-xl leading-relaxed max-w-lg">
-                  {section.content.description}
-                </p>
-                <button onClick={() => handleAction(section.content.action)} className="group px-10 py-5 bg-primary text-white rounded-[24px] font-black text-lg hover:glow-effect transition-all flex items-center gap-4">
-                  {section.content.ctaText} <ArrowRight className="group-hover:translate-x-2 transition-transform" />
-                </button>
-              </div>
-              <div className="relative">
-                <div className="absolute -inset-4 bg-primary/20 rounded-[60px] blur-3xl opacity-50" />
-                <div className="relative aspect-square rounded-[50px] overflow-hidden border border-white/10 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-700">
-                  <img src={section.content.image} alt="Hero" className="w-full h-full object-cover scale-110 hover:scale-100 transition-transform duration-700" />
-                </div>
-              </div>
-            </div>
-          </section>
-        );
-      case 'features':
-        // ... (resto de secciones igual)
-        return (
-          <section id={sectionId} key={idx} className="py-32 px-6 bg-white/5 border-y border-white/5 scroll-mt-24">
-            <div className="max-w-7xl mx-auto">
-              <h2 className="text-4xl md:text-5xl font-black text-center mb-20 text-white tracking-tight">{section.content.title || '¿Por qué elegirnos?'}</h2>
-              <div className="grid md:grid-cols-3 gap-12">
-                {section.content.items?.map((item, i) => (
-                  <div key={i} className="p-10 rounded-[40px] bg-dark-800 border border-white/5 hover:border-primary/40 transition-all group">
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
-                      <Sparkles className="text-primary" />
-                    </div>
-                    <h4 className="text-2xl font-bold text-white mb-4">{item.title}</h4>
-                    <p className="text-slate-400 text-base leading-relaxed">{item.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        );
-      case 'contact':
-        return (
-          <section id={sectionId} key={idx} className="py-32 px-6 scroll-mt-24">
-            <div className="max-w-4xl mx-auto glass rounded-[64px] p-16 border border-white/5 text-center">
-              <h2 className="text-4xl md:text-5xl font-black mb-6 text-white tracking-tight">{section.content.title}</h2>
-              <p className="text-slate-400 text-lg mb-16 max-w-2xl mx-auto">{section.content.description}</p>
-              <div className="flex flex-col md:flex-row items-center justify-center gap-8">
-                {section.content.email && (
-                  <button 
-                    onClick={() => handleAction({ type: 'email', value: section.content.email })}
-                    className="flex flex-col items-center gap-2 hover:scale-105 transition-transform"
-                  >
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Email</p>
-                    <p className="text-2xl font-bold text-primary">{section.content.email}</p>
-                  </button>
-                )}
-                {section.content.phone && (
-                  <button 
-                    onClick={() => handleAction({ type: 'phone', value: section.content.phone })}
-                    className="flex flex-col items-center gap-2 hover:scale-105 transition-transform"
-                  >
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Teléfono</p>
-                    <p className="text-2xl font-bold text-white">{section.content.phone}</p>
-                  </button>
-                )}
-              </div>
-            </div>
-          </section>
-        );
-      case 'cta':
-        return (
-          <section id={sectionId} key={idx} className="py-20 px-6 bg-primary/10 scroll-mt-24 border-y border-primary/20">
-            <div className="max-w-4xl mx-auto text-center space-y-8">
-              <h2 className="text-4xl font-bold text-white">{section.content.title}</h2>
-              <p className="text-slate-300 text-lg">{section.content.description}</p>
-              <button 
-                onClick={() => handleAction(section.content.action)}
-                className="px-8 py-3 bg-white text-black rounded-xl font-bold hover:scale-105 transition-all"
-              >
-                {section.content.buttonText || 'Contactar'}
-              </button>
-            </div>
-          </section>
-        );
-      case 'testimonials':
-        return (
-          <section id={sectionId} key={idx} className="py-32 px-6 scroll-mt-24">
-            <div className="max-w-7xl mx-auto text-center">
-              <h2 className="text-4xl md:text-5xl font-black mb-20 text-white tracking-tight">{section.content.title || 'Lo que dicen de nosotros'}</h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {section.content.items?.map((item, i) => (
-                  <div key={i} className="p-8 rounded-[40px] bg-dark-900 border border-white/5 italic text-slate-400 relative">
-                    <p className="mb-6">"{item.description}"</p>
-                    <p className="font-bold text-white not-italic">— {item.title}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-    setMobileMenuOpen(false);
-  };
+  if (error || !tenant) return (
+    <div className="min-h-screen bg-dark-950 flex flex-col items-center justify-center p-4 text-center text-white">
+      <Globe className="text-red-400 w-20 h-20 mb-6" />
+      <h1 className="text-2xl font-bold mb-2">Ops! Página no disponible</h1>
+      <p className="text-slate-400 max-w-md mb-8">{error}</p>
+      <Link to="/" className="px-8 py-3 bg-primary text-white rounded-2xl font-bold">Ir a Inicio</Link>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-dark-950 text-white selection:bg-primary/30 font-sans">
-      {/* Navbar Dinámico Premium */}
       <nav className="h-24 border-b border-white/5 flex items-center justify-between px-8 lg:px-16 backdrop-blur-2xl sticky top-0 z-50 bg-dark-950/80">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-[18px] bg-dark-800 border border-white/10 flex items-center justify-center overflow-hidden shadow-xl">
-            {tenant?.logo ? (
-              <img src={tenant.logo} alt={tenant.name} className="w-full h-full object-cover" />
-            ) : (
-              <Building2 className="text-primary w-6 h-6" />
-            )}
+            {tenant?.logo ? <img src={tenant.logo} alt={tenant.name} className="w-full h-full object-cover" /> : <Building2 className="text-primary w-6 h-6" />}
           </div>
-          <span className="font-black text-2xl tracking-tighter text-white">{tenant?.name}</span>
+          <span className="font-black text-2xl tracking-tighter">{tenant?.name}</span>
         </div>
 
-        {/* Menú de escritorio */}
         <div className="hidden lg:flex items-center gap-10">
           {menu.map((item) => (
-            <Link 
-              key={item._id} 
-              to={item.path === '/' ? '/' : `${item.path}`}
-              className={`text-sm font-black uppercase tracking-widest transition-all hover:text-primary ${
-                (urlPath === item.path.replace('/', '') || (!urlPath && item.path === '/')) 
-                ? 'text-primary' : 'text-slate-500'
-              }`}
-            >
+            <Link key={item._id} to={item.path === '/' ? '/' : `${item.path}`} className={`text-sm font-black uppercase tracking-widest transition-all hover:text-primary ${(urlPath === item.path.replace('/', '') || (!urlPath && item.path === '/')) ? 'text-primary' : 'text-slate-500'}`}>
               {item.name}
             </Link>
           ))}
-          <button className="ml-4 px-8 py-3 bg-white text-black rounded-full font-black text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-xl shadow-white/5">
-            Contactar
-          </button>
         </div>
-
-        {/* Botón móvil */}
-        <button className="lg:hidden p-3 bg-white/5 rounded-2xl text-slate-400" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <X /> : <MenuIcon />}
-        </button>
+        <button className="lg:hidden p-3 bg-white/5 rounded-2xl" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>{mobileMenuOpen ? <X /> : <MenuIcon />}</button>
       </nav>
 
-      {/* Menú móvil */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 top-24 bg-dark-950 z-[60] p-10 lg:hidden animate-in slide-in-from-right duration-500">
-          <div className="flex flex-col gap-8">
-            {menu.map((item) => (
-              <Link 
-                key={item._id} 
-                to={item.path === '/' ? '/' : `${item.path}`}
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-5xl font-black text-white hover:text-primary transition-colors tracking-tighter"
-              >
-                {item.name}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Contenido Dinámico */}
       <main className="animate-fade-in">
         {!page || !page.sections || page.sections.length === 0 ? (
           <div className="py-60 text-center px-6">
-            <h2 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter">Bienvenido a {tenant?.name}</h2>
-            <p className="text-slate-500 text-xl max-w-2xl mx-auto leading-relaxed font-medium">
-              Nuestra presencia digital está siendo esculpida. <br />Regresa pronto para descubrir todo lo que tenemos para ti.
-            </p>
+            <h2 className="text-5xl font-black mb-8">Bienvenido a {tenant?.name}</h2>
+            <p className="text-slate-500 text-xl max-w-2xl mx-auto">Regresa pronto para descubrir todo lo que tenemos para ti.</p>
           </div>
         ) : (
-          page.sections.map((section, idx) => renderSection(section, idx))
+          page.sections.map((section, idx) => <SectionRenderer key={idx} section={section} idx={idx} />)
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="py-20 border-t border-white/5 bg-dark-900/20">
-        <div className="max-w-7xl mx-auto px-8 text-center">
-          <p className="text-slate-600 text-xs font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3">
-            Powered by <Sparkles size={16} className="text-primary" /> <span className="text-slate-400">ModularBusiness</span>
-          </p>
-        </div>
+      <footer className="py-20 border-t border-white/5 text-center">
+        <p className="text-slate-600 text-xs font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3">Powered by <Sparkles size={16} className="text-primary" /> ModularBusiness</p>
       </footer>
     </div>
   );
