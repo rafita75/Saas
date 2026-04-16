@@ -63,6 +63,7 @@ export const register = asyncHandler(async (req, res) => {
     const [tenant] = await Tenant.create([{
       name: businessName,
       slug,
+      publicSlug: slug, // Inicializar igual al slug administrativo
       ownerId: user._id,
     }], { session });
 
@@ -215,7 +216,14 @@ export const me = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     user: req.user,
-    tenant: tenant,
+    tenant: {
+      id: tenant._id,
+      name: tenant.name,
+      slug: tenant.slug,
+      publicSlug: tenant.publicSlug, // ✅ Añadido
+      logo: tenant.logo,
+      hasCompletedOnboarding: tenant.hasCompletedOnboarding
+    },
     role: req.tenantUser?.role,
     permissions: req.tenantUser?.permissions || [],
   });

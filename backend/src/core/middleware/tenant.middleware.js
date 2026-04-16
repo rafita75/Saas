@@ -46,9 +46,23 @@ export const tenantResolver = async (req, res, next) => {
     if (slug) {
       // ✅ Asegurar que slug sea string para prevenir NoSQL Injection
       const slugStr = String(slug);
-      const requestedTenant = await Tenant.findOne({ slug: slugStr, status: 'active' });
+      const isOfficialDomain = hostname.endsWith('jgsystemsgt.com') || hostname === 'jgsystemsgt.com';
+      const isAdminSubdomain = hostname.startsWith('admin.');
+
+      let requestedTenant = null;
+
+      // 1. Si es subdominio admin o estamos en localhost/render con slug en URL
+      // buscamos por el slug administrativo fijo.
+      if (isAdminSubdomain || (!isOfficialDomain && req.params.slug)) {
+        requestedTenant = await Tenant.findOne({ slug: slugStr, status: 'active' });
+      } else {
+        // 2. Si es subdominio directo (ej. tienda.jgsystemsgt.com)
+        // buscamos por el publicSlug.
+        requestedTenant = await Tenant.findOne({ publicSlug: slugStr, status: 'active' });
+      }
+
       if (requestedTenant) {
-        req.requestedTenant = requestedTenant;  // ✅ No sobrescribir req.tenant
+        req.requestedTenant = requestedTenant;
       }
     }
     

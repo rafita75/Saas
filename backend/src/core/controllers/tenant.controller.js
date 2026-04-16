@@ -69,6 +69,46 @@ export const updateTenant = asyncHandler(async (req, res) => {
   res.json({ success: true, tenant: updatedTenant });
 });
 
+export const updatePublicSlug = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+  const { publicSlug } = req.body;
+  const tenant = req.tenant;
+
+  if (!publicSlug || publicSlug.length < 3) {
+    return res.status(400).json({ success: false, error: 'El slug público debe tener al menos 3 caracteres' });
+  }
+
+  // Validar formato
+  const slugRegex = /^[a-z0-9-]+$/;
+  if (!slugRegex.test(publicSlug)) {
+    return res.status(400).json({ success: false, error: 'Formato de slug inválido (solo letras, números y guiones)' });
+  }
+
+  // Verificar disponibilidad
+  const existing = await Tenant.findOne({ publicSlug, _id: { $ne: tenant._id } });
+  if (existing) {
+    return res.status(400).json({ success: false, error: 'Este slug ya está siendo utilizado por otro negocio' });
+  }
+
+  tenant.publicSlug = publicSlug;
+  await tenant.save();
+
+  res.json({ success: true, publicSlug: tenant.publicSlug });
+});
+
+export const updateLogo = asyncHandler(async (req, res) => {
+  const tenant = req.tenant;
+
+  if (!req.file) {
+    return res.status(400).json({ success: false, error: 'No se subió ninguna imagen' });
+  }
+
+  tenant.logo = req.file.path; // URL de Cloudinary
+  await tenant.save();
+
+  res.json({ success: true, logo: tenant.logo });
+});
+
 export const inviteUser = asyncHandler(async (req, res) => {
   const { email, role } = req.body;
   const tenant = req.authenticatedTenant || req.tenant;

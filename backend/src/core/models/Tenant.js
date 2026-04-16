@@ -13,6 +13,13 @@ const tenantSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
   },
+  publicSlug: {
+    type: String,
+    unique: true,
+    lowercase: true,
+    trim: true,
+    sparse: true, // Permitir nulos temporalmente si es necesario
+  },
   logo: {
     type: String,
     default: '',
