@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, ArrowLeft, Layout, Settings, Eye, Check, ChevronRight, Type, Edit3, Globe, Plus, Trash2, Smartphone, Monitor, X, Mail, Phone, Instagram, Facebook, Twitter } from 'lucide-react';
+import { Save, ArrowLeft, Layout, Settings, Eye, Check, ChevronRight, Type, Edit3, Globe, Plus, Trash2, Smartphone, Monitor, X, Mail, Phone } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../core/auth/context/AuthContext';
 import api from '../../../lib/api';

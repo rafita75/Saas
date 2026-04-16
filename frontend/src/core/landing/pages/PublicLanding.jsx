@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../../lib/api';
-import { Sparkles, Building2, Globe, ArrowRight, Menu as MenuIcon, X, Check, Mail, Phone, Instagram, Facebook, Twitter } from 'lucide-react';
+import { Sparkles, Building2, Globe, ArrowRight, Menu as MenuIcon, X, Check, Mail, Phone } from 'lucide-react';
 
 /**
  * Componente que renderiza una sección específica basada en su tipo y contenido.
