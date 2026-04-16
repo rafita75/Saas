@@ -28,14 +28,30 @@ export const getLandingByPath = asyncHandler(async (req, res) => {
   // Si path es 'root', buscamos '/', si no, buscamos '/path'
   const searchPath = (path === 'root' || !path) ? '/' : `/${path}`;
 
-  const landing = await LandingPage.findOne({ 
+  let landing = await LandingPage.findOne({ 
     tenantId: tenant._id,
     path: searchPath,
     isActive: true 
   });
 
+  // Si no existe ninguna landing pero el path es root, enviamos una de cortesía
+  if (!landing && searchPath === '/') {
+    landing = {
+      name: 'Inicio',
+      sections: [{
+        type: 'hero',
+        content: {
+          title: `Bienvenido a ${tenant.name}`,
+          description: 'Esta es tu nueva página de inicio. Comienza a editarla desde tu panel de control.',
+          ctaText: 'Saber más',
+          image: ''
+        }
+      }]
+    };
+  }
+
   if (!landing) {
-    return res.status(404).json({ success: false, error: 'Página no encontrada' });
+    return res.status(404).json({ success: false, error: 'Esta página aún no ha sido creada.' });
   }
 
   res.json({ success: true, landing });

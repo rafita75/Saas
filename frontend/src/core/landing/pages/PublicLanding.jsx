@@ -147,17 +147,17 @@ const PublicLanding = () => {
 
   return (
     <div className="min-h-screen bg-dark-950 text-white selection:bg-primary/30">
-      {/* Navbar Dinámico */}
+      {/* Navbar Dinámico - Verificación de seguridad para tenant */}
       <nav className="h-20 border-b border-white/5 flex items-center justify-between px-6 lg:px-12 backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-dark-800 border border-white/10 flex items-center justify-center overflow-hidden">
-            {tenant.logo ? (
+            {tenant?.logo ? (
               <img src={tenant.logo} alt={tenant.name} className="w-full h-full object-cover" />
             ) : (
               <Building2 className="text-primary w-6 h-6" />
             )}
           </div>
-          <span className="font-bold text-xl tracking-tight">{tenant.name}</span>
+          <span className="font-bold text-xl tracking-tight">{tenant?.name || 'Cargando...'}</span>
         </div>
 
         {/* Menú de escritorio */}
