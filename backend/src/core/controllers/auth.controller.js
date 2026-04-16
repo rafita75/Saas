@@ -147,6 +147,23 @@ export const login = asyncHandler(async (req, res) => {
   const tenant = validTenants[0];
   const token = generateToken({ userId: user._id, tenantId: tenant.id, slug: tenant.slug });
 
+  // ✅ GUARDAR SESIÓN EN BASE DE DATOS (Faltaba esto)
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+  
+  await Session.create({
+    userId: user._id,
+    tenantId: tenant.id,
+    token,
+    ip: req.ip,
+    userAgent: req.headers['user-agent'],
+    expiresAt,
+  });
+
+  // Actualizar último login
+  user.lastLogin = new Date();
+  await user.save();
+
   // Configuración de cookie para comunicación Vercel <-> Render
   res.cookie('token', token, {
     httpOnly: true,
