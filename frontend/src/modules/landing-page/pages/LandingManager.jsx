@@ -62,7 +62,7 @@ const LandingManager = () => {
         </button>
       </div>
 
-      {/* Toolbar - Search & Filter */}
+      {/* Toolbar */}
       <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 p-2 rounded-2xl">
          <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 w-4 h-4" />
@@ -97,12 +97,10 @@ const LandingManager = () => {
           {landings.map((landing) => (
             <div key={landing._id} className="group bg-slate-950 border border-white/[0.05] rounded-[3rem] overflow-hidden hover:border-indigo-600/50 transition-all duration-500 hover:-translate-y-2 shadow-2xl relative">
               
-              {/* Preview Thumbnail */}
               <div className="aspect-[16/10] bg-indigo-600/5 relative overflow-hidden flex items-center justify-center border-b border-white/[0.05]">
                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                  <Building2 className="text-slate-800 w-16 h-16 group-hover:scale-110 group-hover:text-indigo-900 transition-all duration-700" />
                  
-                 {/* Status Badge */}
                  <div className="absolute top-6 right-6">
                     <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[8px] font-black uppercase tracking-widest rounded-full flex items-center gap-2">
                        <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" /> Activa
@@ -110,7 +108,6 @@ const LandingManager = () => {
                  </div>
               </div>
 
-              {/* Info & Meta */}
               <div className="p-8 space-y-6">
                 <div className="space-y-1">
                    <h3 className="text-xl font-black text-white uppercase italic tracking-tighter truncate">{landing.name}</h3>
@@ -148,7 +145,6 @@ const LandingManager = () => {
                 </div>
               </div>
 
-              {/* Decoración Hover */}
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
             </div>
           ))}
