@@ -3,6 +3,7 @@ import { authMiddleware } from '../../core/middleware/auth.middleware.js';
 import { tenantResolver, validateTenantAccess } from '../../core/middleware/tenant.middleware.js';
 import {
   getLandings,
+  getLandingByPath, // ✅ Añadido
   getLandingById,
   createLanding,
   updateLanding,
