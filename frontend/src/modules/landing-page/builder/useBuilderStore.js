@@ -33,6 +33,25 @@ const useBuilderStore = create((set) => ({
     pageData: { ...state.pageData, sections: newSections }
   })),
 
+  // Añadir Nueva Sección
+  addSection: (type) => set((state) => {
+    const defaults = {
+      hero: { title: 'Nuevo Título Impactante', description: 'Describe tu propuesta de valor aquí.', ctaText: 'Comenzar', layout: 'split' },
+      features: { title: 'Características Principales', items: [{ title: 'Característica 1', description: 'Detalle...' }] },
+      pricing: { title: 'Planes y Precios', items: [{ name: 'Básico', price: '29' }] },
+      pitch: { text: 'Una frase que resuma tu éxito.', author: 'Nombre', role: 'Cargo' },
+      contact: { title: 'Contáctanos', description: 'Estamos para ayudarte.' },
+      info: { title: 'Más Información', description: 'Detalles adicionales del servicio.' }
+    };
+    const newSection = {
+      id: `${type}-${Date.now()}`,
+      type,
+      content: defaults[type] || { title: 'Nuevo Bloque' },
+      order: state.pageData.sections.length
+    };
+    return { pageData: { ...state.pageData, sections: [...state.pageData.sections, newSection] } };
+  }),
+
   // Actualización de Ítems (Listas como Precios/Features)
   updateListItem: (itemIdx, field, value) => set((state) => {
     if (state.selectedSectionIndex === null) return state;

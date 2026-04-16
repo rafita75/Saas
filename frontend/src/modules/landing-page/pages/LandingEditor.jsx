@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Save, ArrowLeft, Layout, Globe, ChevronRight, Edit3, Plus, Trash2, X, Layers, Minimize2, Maximize2, PanelLeftClose, PanelLeftOpen, Eye, Palette } from 'lucide-react';
+import { Save, ArrowLeft, Layout, Globe, ChevronRight, Edit3, Plus, Trash2, X, Layers, Minimize2, Maximize2, PanelLeftClose, PanelLeftOpen, Eye, Palette, Image as ImageIcon } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../../core/auth/context/AuthContext'; 
 import api from '../../../lib/api'; 
 import { LANDING_TEMPLATES } from '../config/templates.config';
 import Toast from '../../../shared/components/Toast'; 
-import { TemplateRenderer, ModularNav, ModularFooter } from '../templates/TemplateRenderer';
+import { TemplateRenderer, ModularNav, ModularFooter, LuminaNav, LuminaFooter, EliteNav, EliteFooter } from '../templates/TemplateRenderer';
 import useBuilderStore from '../builder/useBuilderStore';
 
 const LandingEditor = () => {
@@ -28,7 +28,8 @@ const LandingEditor = () => {
     updateListItem,
     updateTheme,
     moveSection,
-    deleteSection
+    deleteSection,
+    addSection
   } = useBuilderStore();
 
   useEffect(() => {
@@ -39,7 +40,6 @@ const LandingEditor = () => {
           const pageRes = await api.get(`/landings/${id}`);
           if (pageRes.data.success) {
             const data = pageRes.data.landing;
-            // Sanitización de datos para evitar pantallazos
             setPageData({
               ...data,
               sections: data.sections || [],
@@ -71,7 +71,7 @@ const LandingEditor = () => {
       setLoading(true);
       if (isNew) await api.post('/landings', pageData);
       else await api.put(`/landings/${id}`, pageData);
-      setToast({ message: '¡Publicación exitosa!', type: 'success' });
+      setToast({ message: '¡Landing actualizada con éxito!', type: 'success' });
       setTimeout(() => navigate(`/${tenant?.slug}/landings`), 1500);
     } catch (err) {
       setToast({ message: err.response?.data?.error || 'Error al guardar', type: 'error' });
@@ -101,6 +101,16 @@ const LandingEditor = () => {
       </div>
     </div>
   );
+
+  const getEditorUI = () => {
+    switch(pageData.templateId) {
+      case 'lumina': return { Nav: LuminaNav, Footer: LuminaFooter };
+      case 'elite': return { Nav: EliteNav, Footer: EliteFooter };
+      default: return { Nav: ModularNav, Footer: ModularFooter };
+    }
+  };
+
+  const { Nav, Footer } = getEditorUI();
 
   return (
     <div className="h-screen flex flex-col bg-slate-950 overflow-hidden font-sans antialiased">
@@ -168,6 +178,24 @@ const LandingEditor = () => {
                         </div>
                      </div>
                    )}
+
+                   {/* Editor de Imagen */}
+                   {pageData.sections[selectedSectionIndex].content.image !== undefined && (
+                     <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                           <ImageIcon size={12} className="text-indigo-400" />
+                           <label className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">URL de la Imagen</label>
+                        </div>
+                        <input 
+                          type="text" 
+                          value={pageData.sections[selectedSectionIndex].content.image} 
+                          onChange={(e) => updateSectionContent('image', e.target.value)} 
+                          className="w-full bg-black/40 border border-white/[0.05] rounded-xl px-4 py-3 text-[10px] text-indigo-400 outline-none focus:border-indigo-500 transition-all shadow-inner truncate" 
+                          placeholder="https://..."
+                        />
+                     </div>
+                   )}
+
                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-l-2 border-indigo-600 pl-3">Contenido</p>
                    {Object.entries(pageData.sections[selectedSectionIndex].content).map(([key, val]) => {
                      if (['items', 'stats', 'action', 'secondaryAction', 'layout', 'image'].includes(key)) return null;
@@ -175,8 +203,8 @@ const LandingEditor = () => {
                        <div key={key} className="space-y-2 group">
                          <label className="text-[9px] font-black text-slate-500 uppercase tracking-tighter ml-1">{key}</label>
                          {key.toLowerCase().includes('description') || key === 'text' ? 
-                           <textarea value={val} onChange={(e) => updateSectionContent(key, e.target.value)} className="w-full bg-black/40 border border-white/[0.05] rounded-xl px-4 py-3 text-xs text-slate-300 outline-none h-32 resize-none focus:border-indigo-500/50 transition-all" /> : 
-                           <input type="text" value={val} onChange={(e) => updateSectionContent(key, e.target.value)} className="w-full bg-black/40 border border-white/[0.05] rounded-xl px-4 py-3 text-xs text-slate-300 outline-none focus:border-indigo-500/50 transition-all" />
+                           <textarea value={val} onChange={(e) => updateSectionContent(key, e.target.value)} className="w-full bg-black/40 border border-white/[0.05] rounded-xl px-4 py-3 text-xs text-slate-300 outline-none h-32 resize-none focus:border-indigo-500/50 transition-all shadow-inner" /> : 
+                           <input type="text" value={val} onChange={(e) => updateSectionContent(key, e.target.value)} className="w-full bg-black/40 border border-white/[0.05] rounded-xl px-4 py-3 text-xs text-slate-300 outline-none focus:border-indigo-500/50 transition-all shadow-inner" />
                          }
                        </div>
                      );
@@ -216,6 +244,20 @@ const LandingEditor = () => {
                     ))}
                   </div>
                 </div>
+                <div className="pt-8 border-t border-white/[0.05] space-y-4">
+                  <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Añadir Componente</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {['pitch', 'pricing', 'info', 'contact', 'features', 'cta'].map(type => (
+                      <button 
+                        key={type} 
+                        onClick={() => addSection(type)}
+                        className="py-4 border border-white/[0.05] bg-white/[0.02] rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center gap-2 group"
+                      >
+                        <Plus size={12} className="group-hover:rotate-90 transition-all" /> {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -234,14 +276,26 @@ const LandingEditor = () => {
               <div className="relative bg-white min-h-screen">
                 {activeTab === 'editor' ? (
                   <div className="flex flex-col">
-                    <ModularNav tenant={tenant} isEditor={true} />
+                    <Nav tenant={tenant} isEditor={true} />
                     {pageData.sections.map((s, idx) => (
                       <TemplateRenderer key={s.id || idx} templateId={pageData.templateId} section={s} idx={idx} isPreview={true} isSelected={selectedSectionIndex === idx} onSectionClick={setSelectedSectionIndex} theme={pageData.theme} />
                     ))}
-                    <ModularFooter tenant={tenant} />
+                    <Footer tenant={tenant} />
                   </div>
                 ) : (
-                  <div className="p-40">Configuración SEO</div>
+                  <div className="p-40 bg-white min-h-screen space-y-20">
+                    <h3 className="text-8xl font-black text-slate-900 tracking-tighter uppercase italic">SEO <span className="text-indigo-600">Settings</span></h3>
+                    <div className="space-y-12 max-w-2xl">
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-6">Título SEO</label>
+                        <input type="text" value={pageData.seo?.title || ''} onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, title: e.target.value}})} className="w-full bg-slate-50 border border-slate-200 rounded-[2rem] px-10 py-6 text-xl font-bold text-slate-900 outline-none" />
+                      </div>
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-6">Descripción</label>
+                        <textarea value={pageData.seo?.description || ''} onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, description: e.target.value}})} className="w-full bg-slate-50 border border-slate-200 rounded-[2rem] px-10 py-6 text-lg text-slate-600 h-48 outline-none resize-none" />
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

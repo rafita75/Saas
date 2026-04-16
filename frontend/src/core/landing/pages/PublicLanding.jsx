@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../../lib/api'; 
-import { Sparkles, Building2, Globe, ArrowRight, Menu as MenuIcon, X, Check, Mail, Phone, MessageCircle, Star, Zap } from 'lucide-react';
-
-import { TemplateRenderer, ModularNav, ModularFooter } from '../../../modules/landing-page/templates/TemplateRenderer';
+import { Globe } from 'lucide-react';
+import { TemplateRenderer, ModularNav, ModularFooter, LuminaNav, LuminaFooter, EliteNav, EliteFooter } from '../../../modules/landing-page/templates/TemplateRenderer';
 
 const PublicLanding = () => {
   const { path: urlPath } = useParams();
@@ -44,19 +43,26 @@ const PublicLanding = () => {
     fetchPublicData();
   }, [publicSlug, urlPath]);
 
-  if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div></div>;
+  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div></div>;
 
   if (error || !tenant) return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-10 text-center text-slate-900 font-sans">
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-10 text-center text-white font-sans">
       <Globe className="text-indigo-600 w-40 h-40 mb-12 opacity-10" />
       <h1 className="text-5xl font-black mb-6 uppercase italic">Offline</h1>
       <Link to="/" className="px-12 py-6 bg-indigo-600 text-white rounded-[32px] font-black uppercase italic shadow-2xl">Ir al Inicio</Link>
     </div>
   );
 
-  // Renderizador de Nav/Footer por marca
-  const Nav = page?.templateId === 'modular' ? ModularNav : ModularNav; // Fallback a Modular
-  const Footer = page?.templateId === 'modular' ? ModularFooter : ModularFooter;
+  // Selector Dinámico de Nav y Footer por Marca
+  const getNavAndFooter = () => {
+    switch(page?.templateId) {
+      case 'lumina': return { Nav: LuminaNav, Footer: LuminaFooter };
+      case 'elite': return { Nav: EliteNav, Footer: EliteFooter };
+      default: return { Nav: ModularNav, Footer: ModularFooter };
+    }
+  };
+
+  const { Nav, Footer } = getNavAndFooter();
 
   return (
     <div className="min-h-screen bg-white text-slate-900 selection:bg-indigo-600/20 font-sans antialiased scroll-smooth">
