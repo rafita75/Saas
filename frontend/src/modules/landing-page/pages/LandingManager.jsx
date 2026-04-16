@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Layout, Edit3, Globe, Trash2, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../auth/context/AuthContext';
+import { useAuth } from '../../../core/auth/context/AuthContext';
 import api from '../../../lib/api';
 import { getPublicUrl } from '../../../config/domains';
 

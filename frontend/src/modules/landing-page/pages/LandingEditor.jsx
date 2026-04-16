@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Save, Plus, ArrowLeft, Layout, Settings, Eye } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth/context/AuthContext';
+import { useAuth } from '../../../core/auth/context/AuthContext';
 
 const LandingEditor = () => {
   const { tenant } = useAuth();
