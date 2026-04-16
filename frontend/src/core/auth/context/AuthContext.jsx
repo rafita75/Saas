@@ -26,12 +26,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setTenant(null);
       setIsAuthenticated(false);
-      // Solo limpiar si no estamos en rutas públicas
-      const publicPaths = ['/', '/login', '/register'];
-      if (!publicPaths.includes(window.location.pathname)) {
-        clearAuthCookies();
-        localStorage.clear();
-      }
+      // No limpiar aquí, dejar que el interceptor o el ProtectedRoute decidan
     } finally {
       setLoading(false);
     }

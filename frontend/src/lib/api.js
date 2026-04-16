@@ -29,13 +29,19 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const isLoginEndpoint = error.config?.url?.includes('/auth/login');
+    const isMeEndpoint = error.config?.url?.includes('/auth/me');
     
     if (error.response?.status === 401 && !isLoginEndpoint) {
-      // Limpiar cookies y localStorage
-      clearAuthCookies();
-      localStorage.clear();
-      // ✅ URL dinámica
-      window.location.href = `${getMainUrl()}/login`;
+      // ✅ Solo redirigir si NO estamos ya en una ruta pública
+      const publicPaths = ['/login', '/register', '/', '/select-tenant'];
+      const isPublicPath = publicPaths.includes(window.location.pathname) || 
+                          window.location.pathname === '';
+
+      if (!isPublicPath) {
+        clearAuthCookies();
+        localStorage.clear();
+        window.location.href = `${getMainUrl()}/login`;
+      }
     }
     return Promise.reject(error);
   }
