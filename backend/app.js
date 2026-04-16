@@ -44,8 +44,10 @@ app.use(cors({
     const productionRegex = /^https?:\/\/(?:[a-z0-9-]+\.)?jgsystemsgt\.com$/;
     // Regex para localhost y sus subdominios
     const localRegex = /^https?:\/\/(?:[a-z0-9-]+\.)?localhost:5173$/;
+    // Regex para Vercel (staging/prod)
+    const vercelRegex = /^https?:\/\/.*\.vercel\.app$/;
     
-    if (productionRegex.test(origin) || localRegex.test(origin) || allowedOrigins.includes(origin)) {
+    if (productionRegex.test(origin) || localRegex.test(origin) || vercelRegex.test(origin) || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
     

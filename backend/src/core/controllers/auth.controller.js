@@ -92,16 +92,9 @@ export const register = asyncHandler(async (req, res) => {
 
     await session.commitTransaction();
 
-    const isProd = process.env.NODE_ENV === 'production';
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
-    });
-
     res.status(201).json({
       success: true,
+      token, // ✅ Enviar token de vuelta
       user: { id: user._id, fullName: user.fullName, email: user.email },
       tenant: { id: tenant._id, name: tenant.name, slug: tenant.slug },
     });
@@ -195,16 +188,9 @@ export const login = asyncHandler(async (req, res) => {
     expiresAt,
   });
 
-  const isProd = process.env.NODE_ENV === 'production';
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-
   res.json({
     success: true,
+    token, // ✅ Enviar token de vuelta
     user: {
       id: user._id,
       fullName: user.fullName,

@@ -18,14 +18,15 @@ export const tenantResolver = async (req, res, next) => {
       const hostname = req.headers.host || '';
       const parts = hostname.split('.');
       const isLocalhost = hostname.includes('localhost');
+      const isRender = hostname.includes('onrender.com');
       
-      // En localhost: tienda.localhost:3000 (2 partes)
-      // En producción: tienda.midominio.com (3 partes)
+      // No intentar extraer slug si estamos en el dominio base de Render
       if (isLocalhost) {
         if (parts.length >= 2 && parts[0] !== 'localhost' && parts[0] !== 'admin') {
           slug = parts[0];
         }
-      } else {
+      } else if (!isRender) {
+        // Solo en dominios personalizados (ej. tienda.jgsystemsgt.com)
         if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'admin') {
           slug = parts[0];
         }

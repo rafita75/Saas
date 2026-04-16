@@ -19,11 +19,13 @@ export default function Login() {
     try {
       const response = await api.post('/auth/login', { email, password });
       
-      const { user, tenants, tenant } = response.data;
+      const { token, user, tenants, tenant } = response.data;
 
+      setCookie('token', token);
       setCookie('user', JSON.stringify(user));
       setCookie('tenants', JSON.stringify(tenants));
       
+      localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('tenants', JSON.stringify(tenants));
 
