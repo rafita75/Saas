@@ -1,41 +1,42 @@
 export const LANDING_TEMPLATES = [
   {
-    id: 'consulting',
-    name: 'Consultoría Elite',
+    id: 'modular',
+    name: 'Modular Business',
     level: 'gratis',
-    description: 'Diseño minimalista y autoritario.',
-    theme: { primaryColor: '#6366f1', secondaryColor: '#4338ca', font: 'Inter', darkMode: true },
+    description: 'Arquitectura SaaS moderna con enfoque en conversión y claridad.',
+    previewImage: '/plans/modules/img/screen.png',
+    theme: { primaryColor: '#4f46e5', secondaryColor: '#4338ca', font: 'Inter', darkMode: false },
     sections: [
-      { type: 'hero', content: { layout: 'split', badge: 'Estrategia', title: 'Escala tu empresa', description: 'Duplica tu rentabilidad con asesoría experta.', ctaText: 'Agendar Sesión', image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80', action: { type: 'whatsapp', value: '50200000000' } }, order: 0 },
-      { type: 'features', content: { title: 'Metodología', items: [{ title: 'Auditoría 360', description: 'Fugas de capital.' }, { title: 'Automatización', description: 'Tecnología real.' }] }, order: 1 },
-      { type: 'testimonials', content: { title: 'Éxitos', items: [{ title: 'CEO Logis', description: 'Resultados récord.' }] }, order: 2 },
-      { type: 'contact', content: { title: '¿Hablamos?', description: 'Soluciones a medida.', email: 'info@elite.com', phone: '+502 1234 5678' }, order: 3 }
+      { type: 'hero', content: { layout: 'split', badge: 'Powered by J&M Systems', title: 'La estructura modular para el éxito empresarial.', description: 'Escala tu negocio con precisión digital. Nuestra arquitectura permite una integración fluida.', ctaText: 'Agendar Demo', secondaryCtaText: 'Ver Módulos', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80' }, order: 0 },
+      { type: 'features', content: { title: 'Optimización de Procesos', items: [{ title: 'Reducción del 40%', description: 'En tiempos operativos.' }, { title: 'Alertas Inteligentes', description: 'Predictivas.' }] }, order: 1 },
+      { type: 'pricing', content: { title: 'Inversión en Crecimiento', items: [{ name: 'ESENCIAL', price: '499', features: ['Hasta 5 usuarios', '3 Módulos básicos'] }, { name: 'PROFESIONAL', price: '999', isPopular: true, features: ['Usuarios Ilimitados', 'Todos los Módulos'] }] }, order: 2 },
+      { type: 'contact', content: { title: '¿Listo para modular tu futuro?', description: 'Solicita una consultoría gratuita hoy mismo.', email: 'contacto@modularbusiness.com', phone: '+34 900 123 456' }, order: 3 }
     ]
   },
   {
-    id: 'gourmet',
-    name: 'Sabor de Autor',
+    id: 'lumina',
+    name: 'Lumina Editorial',
     level: 'gratis',
-    description: 'Impactante y visual para restaurantes.',
-    theme: { primaryColor: '#f59e0b', secondaryColor: '#78350f', font: 'Playfair Display', darkMode: true },
+    description: 'Estética minimalista y editorial para marcas de alto valor.',
+    previewImage: '/plans/modules/img/screen1.png',
+    theme: { primaryColor: '#171717', secondaryColor: '#404040', font: 'Playfair Display', darkMode: false },
     sections: [
-      { type: 'hero', content: { layout: 'background', title: 'El Arte del Sabor', description: 'Tradición y vanguardia culinaria.', ctaText: 'Reservar Mesa', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80', action: { type: 'whatsapp', value: '50200000000' } }, order: 0 },
-      { type: 'features', content: { title: 'Experiencia Signature', items: [{ title: 'Origen Local', description: 'Frescura total.' }, { title: 'Chef de Autor', description: 'Único.' }] }, order: 1 },
-      { type: 'cta', content: { title: 'Noche Inolvidable', description: 'Asegura tu lugar hoy.', buttonText: 'Consultar WhatsApp', action: { type: 'whatsapp', value: '50200000000' } }, order: 2 },
-      { type: 'contact', content: { title: 'Visítanos', description: '12:00 PM - 11:00 PM', phone: '+502 8888 7777', email: 'reservas@gourmet.com' }, order: 3 }
+      { type: 'hero', content: { layout: 'background', badge: 'Autumn / Winter 2024', title: 'The Architecture of Comfort.', description: 'Curated pieces for the modern home.', ctaText: 'Shop Collection', image: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&q=80' }, order: 0 },
+      { type: 'features', content: { title: 'Essential Silhouettes', items: [{ title: 'Orbital Vase', description: '$124.00' }, { title: 'Linear Lamp', description: '$440.00' }] }, order: 1 },
+      { type: 'cta', content: { title: 'Keep your pulse on minimalism.', description: 'Receive curated insights twice a month.', buttonText: 'Subscribe', action: { type: 'link', value: '#' } }, order: 2 }
     ]
   },
   {
-    id: 'saas',
-    name: 'SaaS Launch',
+    id: 'elite',
+    name: 'Elite Luxury',
     level: 'gratis',
-    description: 'Centrado en la conversión de usuarios.',
-    theme: { primaryColor: '#0ea5e9', secondaryColor: '#312e81', font: 'Montserrat', darkMode: false },
+    description: 'Diseño oscuro y sofisticado con acentos dorados para servicios premium.',
+    previewImage: '/plans/modules/img/screen2.png',
+    theme: { primaryColor: '#fbbf24', secondaryColor: '#d97706', font: 'Montserrat', darkMode: true },
     sections: [
-      { type: 'hero', content: { layout: 'centered', badge: 'v2.0 Live', title: 'Automatiza tu Éxito', description: 'Gestiona tu negocio sin complicaciones.', ctaText: 'Empezar Gratis', action: { type: 'link', value: '/register' } }, order: 0 },
-      { type: 'features', content: { title: 'Productividad', items: [{ title: 'Fácil Uso', description: 'Interfaz intuitiva.' }, { title: 'Seguridad', description: 'Nube blindada.' }] }, order: 1 },
-      { type: 'testimonials', content: { title: 'Testimonios', items: [{ title: 'Marketing Pro', description: '50% más eficientes.' }] }, order: 2 },
-      { type: 'cta', content: { title: '¿Listo?', description: 'Únete a 5,000 negocios.', buttonText: 'Crear cuenta', action: { type: 'link', value: '/register' } }, order: 3 }
+      { type: 'hero', content: { layout: 'centered', badge: 'The Editorial Standard', title: 'Precision in Every Detail.', description: 'Tailored experiences for the discerning collector.', ctaText: 'Explore Services', secondaryCtaText: 'View Gallery', image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80' }, order: 0 },
+      { type: 'features', content: { title: 'Investment Tiers', items: [{ title: 'Silver Standard', price: '299' }, { title: 'Gold Signature', price: '850', isPopular: true }] }, order: 1 },
+      { type: 'contact', content: { title: 'Secure Your Appointment', description: 'Our studio operates by appointment only.', phone: '+1 (310) ELITE-SV', email: 'concierge@elite.com' }, order: 2 }
     ]
   }
 ];

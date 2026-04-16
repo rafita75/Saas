@@ -11,8 +11,9 @@ import FeaturesBento from '../../../modules/landing-page/sections/FeaturesBento'
 import TestimonialsGrid from '../../../modules/landing-page/sections/TestimonialsGrid';
 import CTAGradient from '../../../modules/landing-page/sections/CTAGradient';
 import ContactPremium from '../../../modules/landing-page/sections/ContactPremium';
+import ContactFormSplit from '../../../modules/landing-page/sections/ContactFormSplit';
 
-export const SectionRenderer = ({ section, idx, isPreview = false, onSectionClick, isSelected = false }) => {
+export const SectionRenderer = ({ section, idx, isPreview = false, onSectionClick, isSelected = false, theme = {} }) => {
   if (!section || !section.content) return null;
   const sectionId = section.id || `${section.type}-${idx}`;
   const { layout = 'split' } = section.content;
@@ -40,15 +41,21 @@ export const SectionRenderer = ({ section, idx, isPreview = false, onSectionClic
   }`;
 
   const renderComponent = () => {
+    const props = { content: section.content, handleAction, isPreview, theme };
     switch (section.type) {
       case 'hero':
-        if (layout === 'centered') return <HeroCentered content={section.content} handleAction={handleAction} isPreview={isPreview} />;
-        if (layout === 'background') return <HeroFull content={section.content} handleAction={handleAction} isPreview={isPreview} />;
-        return <HeroSplit content={section.content} handleAction={handleAction} isPreview={isPreview} />;
-      case 'features': return <FeaturesBento content={section.content} isPreview={isPreview} />;
-      case 'testimonials': return <TestimonialsGrid content={section.content} isPreview={isPreview} />;
-      case 'cta': return <CTAGradient content={section.content} handleAction={handleAction} isPreview={isPreview} />;
-      case 'contact': return <ContactPremium content={section.content} handleAction={handleAction} isPreview={isPreview} />;
+        if (layout === 'centered') return <HeroCentered {...props} />;
+        if (layout === 'background') return <HeroFull {...props} />;
+        return <HeroSplit {...props} />;
+      case 'features': return <FeaturesBento {...props} />;
+      case 'testimonials': return <TestimonialsGrid {...props} />;
+      case 'cta': return <CTAGradient {...props} />;
+      case 'contact': 
+        if (layout === 'split') return <ContactFormSplit {...props} />;
+        return <ContactPremium {...props} />;
+      case 'pricing':
+        // Por ahora usamos FeaturesBento para precios o un componente simple si no existe uno de Pricing específico
+        return <FeaturesBento {...props} />;
       default: return null;
     }
   };
