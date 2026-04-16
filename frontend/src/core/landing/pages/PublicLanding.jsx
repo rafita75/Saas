@@ -95,10 +95,38 @@ const PublicLanding = () => {
   const renderSection = (section, idx) => {
     if (!section || !section.content) return null;
     
+    // Generar ID para ancla del Navbar (slug del nombre o tipo)
+    const sectionId = section.content.title ? section.content.title.toLowerCase().replace(/\s+/g, '-') : `${section.type}-${idx}`;
+
+    const handleAction = (action) => {
+      if (!action || !action.value) return;
+      switch (action.type) {
+        case 'whatsapp':
+          window.open(`https://wa.me/${action.value.replace(/\D/g, '')}`, '_blank');
+          break;
+        case 'phone':
+          window.location.href = `tel:${action.value}`;
+          break;
+        case 'email':
+          window.location.href = `mailto:${action.value}`;
+          break;
+        case 'link':
+          // Si es ancla interna
+          if (action.value.startsWith('#')) {
+            document.getElementById(action.value.substring(1))?.scrollIntoView({ behavior: 'smooth' });
+          } else {
+            window.open(action.value, '_blank');
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
     switch (section.type) {
       case 'hero':
         return (
-          <section key={idx} className="relative pt-24 pb-32 px-6 overflow-hidden">
+          <section id={sectionId} key={idx} className="relative pt-24 pb-32 px-6 overflow-hidden scroll-mt-24">
             <div className="max-w-5xl mx-auto text-center relative z-10">
               <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight text-white tracking-tighter italic">
                 {section.content.title}
@@ -106,9 +134,12 @@ const PublicLanding = () => {
               <p className="text-slate-400 text-lg md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed">
                 {section.content.description}
               </p>
-              {section.content.ctaText && (
-                <button className="px-12 py-5 bg-primary text-white rounded-[24px] font-black text-lg hover:glow-effect transition-all">
-                  {section.content.ctaText}
+              {(section.content.ctaText || section.content.buttonText) && (
+                <button 
+                  onClick={() => handleAction(section.content.action)}
+                  className="px-12 py-5 bg-primary text-white rounded-[24px] font-black text-lg hover:glow-effect transition-all"
+                >
+                  {section.content.ctaText || section.content.buttonText}
                 </button>
               )}
               {section.content.image && (
@@ -121,7 +152,7 @@ const PublicLanding = () => {
         );
       case 'features':
         return (
-          <section key={idx} className="py-32 px-6 bg-white/5 border-y border-white/5">
+          <section id={sectionId} key={idx} className="py-32 px-6 bg-white/5 border-y border-white/5 scroll-mt-24">
             <div className="max-w-7xl mx-auto">
               <h2 className="text-4xl md:text-5xl font-black text-center mb-20 text-white tracking-tight">{section.content.title || '¿Por qué elegirnos?'}</h2>
               <div className="grid md:grid-cols-3 gap-12">
@@ -140,23 +171,60 @@ const PublicLanding = () => {
         );
       case 'contact':
         return (
-          <section key={idx} className="py-32 px-6">
+          <section id={sectionId} key={idx} className="py-32 px-6 scroll-mt-24">
             <div className="max-w-4xl mx-auto glass rounded-[64px] p-16 border border-white/5 text-center">
               <h2 className="text-4xl md:text-5xl font-black mb-6 text-white tracking-tight">{section.content.title}</h2>
               <p className="text-slate-400 text-lg mb-16 max-w-2xl mx-auto">{section.content.description}</p>
               <div className="flex flex-col md:flex-row items-center justify-center gap-8">
                 {section.content.email && (
-                  <div className="flex flex-col items-center gap-2">
+                  <button 
+                    onClick={() => handleAction({ type: 'email', value: section.content.email })}
+                    className="flex flex-col items-center gap-2 hover:scale-105 transition-transform"
+                  >
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Email</p>
                     <p className="text-2xl font-bold text-primary">{section.content.email}</p>
-                  </div>
+                  </button>
                 )}
                 {section.content.phone && (
-                  <div className="flex flex-col items-center gap-2">
+                  <button 
+                    onClick={() => handleAction({ type: 'phone', value: section.content.phone })}
+                    className="flex flex-col items-center gap-2 hover:scale-105 transition-transform"
+                  >
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Teléfono</p>
                     <p className="text-2xl font-bold text-white">{section.content.phone}</p>
-                  </div>
+                  </button>
                 )}
+              </div>
+            </div>
+          </section>
+        );
+      case 'cta':
+        return (
+          <section id={sectionId} key={idx} className="py-20 px-6 bg-primary/10 scroll-mt-24 border-y border-primary/20">
+            <div className="max-w-4xl mx-auto text-center space-y-8">
+              <h2 className="text-4xl font-bold text-white">{section.content.title}</h2>
+              <p className="text-slate-300 text-lg">{section.content.description}</p>
+              <button 
+                onClick={() => handleAction(section.content.action)}
+                className="px-8 py-3 bg-white text-black rounded-xl font-bold hover:scale-105 transition-all"
+              >
+                {section.content.buttonText || 'Contactar'}
+              </button>
+            </div>
+          </section>
+        );
+      case 'testimonials':
+        return (
+          <section id={sectionId} key={idx} className="py-32 px-6 scroll-mt-24">
+            <div className="max-w-7xl mx-auto text-center">
+              <h2 className="text-4xl md:text-5xl font-black mb-20 text-white tracking-tight">{section.content.title || 'Lo que dicen de nosotros'}</h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {section.content.items?.map((item, i) => (
+                  <div key={i} className="p-8 rounded-[40px] bg-dark-900 border border-white/5 italic text-slate-400 relative">
+                    <p className="mb-6">"{item.description}"</p>
+                    <p className="font-bold text-white not-italic">— {item.title}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
@@ -164,6 +232,14 @@ const PublicLanding = () => {
       default:
         return null;
     }
+  };
+
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setMobileMenuOpen(false);
   };
 
   return (

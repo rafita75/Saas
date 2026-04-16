@@ -97,6 +97,47 @@ const LandingEditor = () => {
     setPageData({ ...pageData, sections: newSections });
   };
 
+  const moveSection = (index, direction) => {
+    const newSections = [...pageData.sections];
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= newSections.length) return;
+    
+    [newSections[index], newSections[newIndex]] = [newSections[newIndex], newSections[index]];
+    
+    // Actualizar el orden numérico
+    newSections.forEach((s, i) => s.order = i);
+    
+    setPageData({ ...pageData, sections: newSections });
+    setSelectedSectionIndex(newIndex);
+  };
+
+  const addExtraSection = (type) => {
+    // Validar límite de plan gratis (1 sección extra sobre la plantilla base)
+    // Asumimos que la plantilla base tiene 3 secciones (según las nuevas configs)
+    if (isFreePlan && pageData.sections.length >= 4) {
+      setToast({ message: 'Límite alcanzado. Mejora al Plan Pro para secciones ilimitadas.', type: 'warning' });
+      return;
+    }
+
+    const defaultContent = {
+      hero: { title: 'Nuevo Título', description: 'Nueva descripción', ctaText: 'Botón', image: '' },
+      features: { title: 'Características', items: [{ title: 'Item 1', description: 'Desc...' }] },
+      contact: { title: 'Contacto', description: 'Escríbenos', email: 'test@mail.com' },
+      cta: { title: 'Llamada a la acción', description: 'Únete hoy', buttonText: 'Click aquí' },
+      testimonials: { title: 'Opiniones', items: [{ title: 'Cliente', description: 'Muy bueno' }] }
+    };
+
+    const newSection = {
+      id: `extra-${Date.now()}`,
+      type: type,
+      content: defaultContent[type] || {},
+      order: pageData.sections.length
+    };
+
+    setPageData({ ...pageData, sections: [...pageData.sections, newSection] });
+    setToast({ message: 'Sección añadida. ¡Ahora puedes editarla!', type: 'success' });
+  };
+
   if (loading && !pageData.name && isNew) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-dark-950">
@@ -212,9 +253,28 @@ const LandingEditor = () => {
                     <button onClick={() => setSelectedSectionIndex(null)} className="text-slate-500 hover:text-white text-[10px] uppercase font-bold">Cerrar</button>
                   </div>
 
+                  {/* Controles de Movimiento */}
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => moveSection(selectedSectionIndex, -1)}
+                      disabled={selectedSectionIndex === 0}
+                      className="flex-1 py-2 bg-dark-800 border border-white/5 rounded-xl text-slate-400 hover:text-white disabled:opacity-30 transition-all flex items-center justify-center gap-2 text-[10px] font-bold uppercase"
+                    >
+                      Subir
+                    </button>
+                    <button 
+                      onClick={() => moveSection(selectedSectionIndex, 1)}
+                      disabled={selectedSectionIndex === pageData.sections.length - 1}
+                      className="flex-1 py-2 bg-dark-800 border border-white/5 rounded-xl text-slate-400 hover:text-white disabled:opacity-30 transition-all flex items-center justify-center gap-2 text-[10px] font-bold uppercase"
+                    >
+                      Bajar
+                    </button>
+                  </div>
+
                   <div className="space-y-5">
+                    {/* Campos de Texto/Imagen */}
                     {Object.keys(selectedSection.content).map((key) => {
-                      if (key === 'items' || key === 'ctaText' || key === 'buttonText') return null;
+                      if (key === 'items' || key === 'ctaText' || key === 'buttonText' || key === 'action') return null;
                       const val = selectedSection.content[key];
                       return (
                         <div key={key} className="space-y-2">
@@ -236,20 +296,74 @@ const LandingEditor = () => {
                         </div>
                       );
                     })}
+
+                    {/* Configuración de Botón de Acción (Si aplica) */}
+                    {(selectedSection.content.ctaText || selectedSection.content.buttonText) && (
+                      <div className="pt-4 border-t border-white/5 space-y-4">
+                        <h4 className="text-[10px] font-black text-primary uppercase tracking-widest">Configurar Botón</h4>
+                        <div className="space-y-3">
+                          <input 
+                            type="text"
+                            value={selectedSection.content.ctaText || selectedSection.content.buttonText}
+                            onChange={(e) => updateSectionContent(selectedSection.content.ctaText ? 'ctaText' : 'buttonText', e.target.value)}
+                            className="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                            placeholder="Texto del botón"
+                          />
+                          <select 
+                            value={selectedSection.content.action?.type || 'link'}
+                            onChange={(e) => updateSectionContent('action', { ...selectedSection.content.action, type: e.target.value })}
+                            className="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                          >
+                            <option value="link">Enlace Interno</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="phone">Llamada</option>
+                            <option value="email">Email</option>
+                          </select>
+                          <input 
+                            type="text"
+                            value={selectedSection.content.action?.value || ''}
+                            onChange={(e) => updateSectionContent('action', { ...selectedSection.content.action, value: e.target.value })}
+                            className="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                            placeholder={selectedSection.content.action?.type === 'whatsapp' ? 'Número con código' : 'Valor del enlace'}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
-                <div className="space-y-6">
-                  <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                    <Type size={14} /> Secciones de la página
-                  </h3>
-                  <div className="space-y-3">
-                    {pageData.sections.map((section, idx) => (
-                      <button key={idx} onClick={() => setSelectedSectionIndex(idx)} className="w-full p-4 bg-dark-800 border border-white/5 rounded-2xl text-xs text-slate-400 flex items-center justify-between hover:border-primary/40 hover:text-white transition-all group">
-                        <span className="capitalize font-bold">{section.type}</span>
-                        <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    ))}
+                <div className="space-y-8">
+                  {/* Lista de Secciones Actuales */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                      <Type size={14} /> Secciones en página
+                    </h3>
+                    <div className="space-y-2">
+                      {pageData.sections.map((section, idx) => (
+                        <button key={idx} onClick={() => setSelectedSectionIndex(idx)} className="w-full p-4 bg-dark-800 border border-white/5 rounded-2xl text-xs text-slate-400 flex items-center justify-between hover:border-primary/40 hover:text-white transition-all group">
+                          <span className="capitalize font-bold">{section.type}</span>
+                          <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Añadir Sección Extra (Limitado) */}
+                  <div className="pt-6 border-t border-white/5 space-y-4">
+                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Añadir Bloque Extra</h3>
+                    <p className="text-[10px] text-slate-600 italic">Puedes añadir 1 bloque adicional en el Plan Gratis.</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['cta', 'testimonials', 'features', 'contact'].map(type => (
+                        <button 
+                          key={type}
+                          onClick={() => addExtraSection(type)}
+                          disabled={pageData.sections.length >= 4}
+                          className="p-3 bg-dark-800 border border-white/5 rounded-xl text-[10px] font-bold text-slate-400 hover:border-primary/50 hover:text-white transition-all disabled:opacity-20"
+                        >
+                          + {type.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
