@@ -1,42 +1,41 @@
-/**
- * Configuración de Plantillas predefinidas para el Módulo de Landing Page
- * Categorías: Negocio, Producto, Marca Personal, Gastronomía, Tech, Moda.
- */
 export const LANDING_TEMPLATES = [
   {
-    id: 'basic-business',
-    name: 'Negocio Moderno',
+    id: 'consulting',
+    name: 'Consultoría Elite',
     level: 'gratis',
-    description: 'Diseño corporativo con imagen al lado.',
-    theme: { primaryColor: '#6366f1', secondaryColor: '#f43f5e', font: 'Inter', darkMode: true },
+    description: 'Diseño minimalista y autoritario.',
+    theme: { primaryColor: '#6366f1', secondaryColor: '#4338ca', font: 'Inter', darkMode: true },
     sections: [
-      { id: 'hero-1', type: 'hero', content: { layout: 'split', title: 'Impulsa tu negocio hoy', description: 'Soluciones innovadoras para empresas que buscan crecer.', ctaText: 'Comenzar Ahora', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80' }, order: 0 },
-      { id: 'feat-1', type: 'features', content: { title: 'Nuestros Pilares', items: [{ title: 'Velocidad', description: 'Rendimiento optimizado.' }, { title: 'Seguridad', description: 'Datos protegidos.' }, { title: 'Soporte', description: 'Atención 24/7.' }] }, order: 1 },
-      { id: 'cont-1', type: 'contact', content: { title: 'Contáctanos', description: '¿Listo para empezar?', email: 'info@empresa.com' }, order: 2 }
+      { type: 'hero', content: { layout: 'split', badge: 'Estrategia', title: 'Escala tu empresa', description: 'Duplica tu rentabilidad con asesoría experta.', ctaText: 'Agendar Sesión', image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80', action: { type: 'whatsapp', value: '50200000000' } }, order: 0 },
+      { type: 'features', content: { title: 'Metodología', items: [{ title: 'Auditoría 360', description: 'Fugas de capital.' }, { title: 'Automatización', description: 'Tecnología real.' }] }, order: 1 },
+      { type: 'testimonials', content: { title: 'Éxitos', items: [{ title: 'CEO Logis', description: 'Resultados récord.' }] }, order: 2 },
+      { type: 'contact', content: { title: '¿Hablamos?', description: 'Soluciones a medida.', email: 'info@elite.com', phone: '+502 1234 5678' }, order: 3 }
     ]
   },
   {
-    id: 'gourmet-delight',
-    name: 'Gourmet Delight',
+    id: 'gourmet',
+    name: 'Sabor de Autor',
     level: 'gratis',
-    description: 'Impactante con imagen de fondo completa.',
+    description: 'Impactante y visual para restaurantes.',
     theme: { primaryColor: '#f59e0b', secondaryColor: '#78350f', font: 'Playfair Display', darkMode: true },
     sections: [
-      { id: 'hero-2', type: 'hero', content: { layout: 'background', title: 'Sabor de Autor', description: 'Experiencia culinaria única con ingredientes locales.', ctaText: 'Ver Menú', image: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80' }, order: 0 },
-      { id: 'cta-1', type: 'cta', content: { title: 'Reserva tu Mesa', description: 'Cupos limitados para cenas especiales.', buttonText: 'Reservar Ahora' }, order: 1 },
-      { id: 'cont-2', type: 'contact', content: { title: 'Ubicación', description: 'Te esperamos en el corazón de la ciudad.', phone: '+502 1234-5678' }, order: 2 }
+      { type: 'hero', content: { layout: 'background', title: 'El Arte del Sabor', description: 'Tradición y vanguardia culinaria.', ctaText: 'Reservar Mesa', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80', action: { type: 'whatsapp', value: '50200000000' } }, order: 0 },
+      { type: 'features', content: { title: 'Experiencia Signature', items: [{ title: 'Origen Local', description: 'Frescura total.' }, { title: 'Chef de Autor', description: 'Único.' }] }, order: 1 },
+      { type: 'cta', content: { title: 'Noche Inolvidable', description: 'Asegura tu lugar hoy.', buttonText: 'Consultar WhatsApp', action: { type: 'whatsapp', value: '50200000000' } }, order: 2 },
+      { type: 'contact', content: { title: 'Visítanos', description: '12:00 PM - 11:00 PM', phone: '+502 8888 7777', email: 'reservas@gourmet.com' }, order: 3 }
     ]
   },
   {
-    id: 'minimal-brand',
-    name: 'Minimal Portfolio',
+    id: 'saas',
+    name: 'SaaS Launch',
     level: 'gratis',
-    description: 'Estilo centrado, limpio y minimalista.',
-    theme: { primaryColor: '#10b981', secondaryColor: '#064e3b', font: 'Montserrat', darkMode: false },
+    description: 'Centrado en la conversión de usuarios.',
+    theme: { primaryColor: '#0ea5e9', secondaryColor: '#312e81', font: 'Montserrat', darkMode: false },
     sections: [
-      { id: 'hero-3', type: 'hero', content: { layout: 'centered', title: 'Creatividad Pura', description: 'Diseñamos marcas que cuentan historias inolvidables.', ctaText: 'Ver Portafolio', image: '' }, order: 0 },
-      { id: 'feat-2', type: 'features', content: { title: 'Nuestra Esencia', items: [{ title: 'Mínimo', description: 'Menos es más.' }, { title: 'Elegante', description: 'Diseño atemporal.' }, { title: 'Único', description: 'Piezas exclusivas.' }] }, order: 1 },
-      { id: 'cont-3', type: 'contact', content: { title: 'Hablemos', description: 'Estamos listos para tu próximo gran reto.', email: 'hello@minimal.com' }, order: 2 }
+      { type: 'hero', content: { layout: 'centered', badge: 'v2.0 Live', title: 'Automatiza tu Éxito', description: 'Gestiona tu negocio sin complicaciones.', ctaText: 'Empezar Gratis', action: { type: 'link', value: '/register' } }, order: 0 },
+      { type: 'features', content: { title: 'Productividad', items: [{ title: 'Fácil Uso', description: 'Interfaz intuitiva.' }, { title: 'Seguridad', description: 'Nube blindada.' }] }, order: 1 },
+      { type: 'testimonials', content: { title: 'Testimonios', items: [{ title: 'Marketing Pro', description: '50% más eficientes.' }] }, order: 2 },
+      { type: 'cta', content: { title: '¿Listo?', description: 'Únete a 5,000 negocios.', buttonText: 'Crear cuenta', action: { type: 'link', value: '/register' } }, order: 3 }
     ]
   }
 ];
