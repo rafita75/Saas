@@ -12,6 +12,8 @@ import TestimonialsGrid from '../../../modules/landing-page/sections/Testimonial
 import CTAGradient from '../../../modules/landing-page/sections/CTAGradient';
 import ContactPremium from '../../../modules/landing-page/sections/ContactPremium';
 import ContactFormSplit from '../../../modules/landing-page/sections/ContactFormSplit';
+import ModularPricing from '../../../modules/landing-page/sections/ModularPricing';
+import ModularInfoSection from '../../../modules/landing-page/sections/ModularInfoSection';
 
 export const SectionRenderer = ({ section, idx, isPreview = false, onSectionClick, isSelected = false, theme = {} }) => {
   if (!section || !section.content) return null;
@@ -36,8 +38,8 @@ export const SectionRenderer = ({ section, idx, isPreview = false, onSectionClic
     }
   };
 
-  const containerClass = `relative scroll-mt-24 transition-all duration-500 ${isPreview ? 'cursor-pointer rounded-[48px] border-2 overflow-hidden mb-12 hover:scale-[0.99]' : ''} ${
-    isSelected ? 'border-primary shadow-[0_0_80px_-20px_rgba(99,102,241,0.8)] ring-[16px] ring-primary/5 bg-dark-800/40 z-20 scale-[0.98]' : 'border-transparent'
+  const containerClass = `relative scroll-mt-24 transition-all duration-500 ${isPreview ? 'cursor-pointer' : ''} ${
+    isSelected ? 'ring-4 ring-primary ring-inset z-20 bg-primary/5' : ''
   }`;
 
   const renderComponent = () => {
@@ -53,9 +55,8 @@ export const SectionRenderer = ({ section, idx, isPreview = false, onSectionClic
       case 'contact': 
         if (layout === 'split') return <ContactFormSplit {...props} />;
         return <ContactPremium {...props} />;
-      case 'pricing':
-        // Por ahora usamos FeaturesBento para precios o un componente simple si no existe uno de Pricing específico
-        return <FeaturesBento {...props} />;
+      case 'pricing': return <ModularPricing {...props} />;
+      case 'info': return <ModularInfoSection {...props} />;
       default: return null;
     }
   };
