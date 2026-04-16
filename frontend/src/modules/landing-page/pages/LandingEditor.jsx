@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Save, ArrowLeft, Layout, Settings, Eye, Check, ChevronRight, Type, Edit3, Globe, Plus, Trash2, Smartphone, Monitor, X } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../../../../core/auth/context/AuthContext'; // ✅ RUTA CORREGIDA (4 niveles)
-import api from '../../../../lib/api'; // ✅ RUTA CORREGIDA (4 niveles)
+import { useAuth } from '../../../core/auth/context/AuthContext'; 
+import api from '../../../lib/api'; 
 import { LANDING_TEMPLATES } from '../config/templates.config';
-import Toast from '../../../../shared/components/Toast'; // ✅ RUTA CORREGIDA (4 niveles)
-import { SectionRenderer } from '../../../../core/landing/pages/PublicLanding'; // ✅ RUTA CORREGIDA (4 niveles)
+import Toast from '../../../shared/components/Toast'; 
+import { SectionRenderer } from '../../../core/landing/pages/PublicLanding'; 
 
 const LandingEditor = () => {
   const { tenant } = useAuth();

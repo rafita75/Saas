@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../../../../lib/api'; // ✅ RUTA CORREGIDA (4 niveles)
+import api from '../../../lib/api'; 
 import { Sparkles, Building2, Globe, ArrowRight, Menu as MenuIcon, X, Check, Mail, Phone, MessageCircle, Star, Zap } from 'lucide-react';
 
-// ✅ RUTAS CORREGIDAS (4 niveles)
-import HeroSplit from '../../../../modules/landing-page/sections/HeroSplit';
-import HeroFull from '../../../../modules/landing-page/sections/HeroFull';
-import HeroCentered from '../../../../modules/landing-page/sections/HeroCentered';
-import FeaturesBento from '../../../../modules/landing-page/sections/FeaturesBento';
-import TestimonialsGrid from '../../../../modules/landing-page/sections/TestimonialsGrid';
-import CTAGradient from '../../../../modules/landing-page/sections/CTAGradient';
-import ContactPremium from '../../../../modules/landing-page/sections/ContactPremium';
+// ✅ RUTAS CORREGIDAS (3 niveles)
+import HeroSplit from '../../../modules/landing-page/sections/HeroSplit';
+import HeroFull from '../../../modules/landing-page/sections/HeroFull';
+import HeroCentered from '../../../modules/landing-page/sections/HeroCentered';
+import FeaturesBento from '../../../modules/landing-page/sections/FeaturesBento';
+import TestimonialsGrid from '../../../modules/landing-page/sections/TestimonialsGrid';
+import CTAGradient from '../../../modules/landing-page/sections/CTAGradient';
+import ContactPremium from '../../../modules/landing-page/sections/ContactPremium';
 
 export const SectionRenderer = ({ section, idx, isPreview = false, onSectionClick, isSelected = false }) => {
   if (!section || !section.content) return null;
