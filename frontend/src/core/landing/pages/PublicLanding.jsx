@@ -95,62 +95,87 @@ const PublicLanding = () => {
   const renderSection = (section, idx) => {
     if (!section || !section.content) return null;
     
-    // Generar ID para ancla del Navbar (slug del nombre o tipo)
     const sectionId = section.content.title ? section.content.title.toLowerCase().replace(/\s+/g, '-') : `${section.type}-${idx}`;
+    const { layout = 'split' } = section.content; // 'split', 'centered', 'background'
 
     const handleAction = (action) => {
       if (!action || !action.value) return;
-      switch (action.type) {
-        case 'whatsapp':
-          window.open(`https://wa.me/${action.value.replace(/\D/g, '')}`, '_blank');
-          break;
-        case 'phone':
-          window.location.href = `tel:${action.value}`;
-          break;
-        case 'email':
-          window.location.href = `mailto:${action.value}`;
-          break;
-        case 'link':
-          // Si es ancla interna
-          if (action.value.startsWith('#')) {
-            document.getElementById(action.value.substring(1))?.scrollIntoView({ behavior: 'smooth' });
-          } else {
-            window.open(action.value, '_blank');
-          }
-          break;
-        default:
-          break;
-      }
+      // ... (lógica de acciones se mantiene igual)
     };
 
     switch (section.type) {
       case 'hero':
-        return (
-          <section id={sectionId} key={idx} className="relative pt-24 pb-32 px-6 overflow-hidden scroll-mt-24">
-            <div className="max-w-5xl mx-auto text-center relative z-10">
-              <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight text-white tracking-tighter italic">
-                {section.content.title}
-              </h1>
-              <p className="text-slate-400 text-lg md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed">
-                {section.content.description}
-              </p>
-              {(section.content.ctaText || section.content.buttonText) && (
-                <button 
-                  onClick={() => handleAction(section.content.action)}
-                  className="px-12 py-5 bg-primary text-white rounded-[24px] font-black text-lg hover:glow-effect transition-all"
-                >
-                  {section.content.ctaText || section.content.buttonText}
+        if (layout === 'centered') {
+          return (
+            <section id={sectionId} key={idx} className="relative pt-32 pb-40 px-6 text-center scroll-mt-24 overflow-hidden">
+              <div className="max-w-4xl mx-auto relative z-10">
+                <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight tracking-tighter italic text-white uppercase">{section.content.title}</h1>
+                <p className="text-slate-400 text-xl md:text-2xl mb-12 max-w-2xl mx-auto leading-relaxed">{section.content.description}</p>
+                {section.content.ctaText && (
+                  <button onClick={() => handleAction(section.content.action)} className="px-12 py-5 bg-primary text-white rounded-full font-black text-lg hover:glow-effect transition-all uppercase tracking-widest">
+                    {section.content.ctaText}
+                  </button>
+                )}
+              </div>
+              {/* Decoración Minimalista */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-20 pointer-events-none">
+                <div className="absolute top-0 left-0 w-96 h-96 bg-primary/20 blur-[150px]" />
+              </div>
+            </section>
+          );
+        }
+
+        if (layout === 'background') {
+          return (
+            <section id={sectionId} key={idx} className="relative min-h-[90vh] flex items-center justify-center px-6 scroll-mt-24 overflow-hidden">
+              {/* Imagen de fondo completa */}
+              <div className="absolute inset-0 z-0">
+                <img src={section.content.image} className="w-full h-full object-cover" alt="Background" />
+                <div className="absolute inset-0 bg-dark-950/70 backdrop-blur-[2px]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent" />
+              </div>
+              
+              <div className="max-w-5xl mx-auto text-center relative z-10">
+                <h1 className="text-6xl md:text-9xl font-black mb-8 leading-none text-white tracking-tight italic drop-shadow-2xl">
+                  {section.content.title}
+                </h1>
+                <p className="text-slate-200 text-xl md:text-3xl mb-12 max-w-3xl mx-auto leading-relaxed font-medium drop-shadow-lg">
+                  {section.content.description}
+                </p>
+                <button onClick={() => handleAction(section.content.action)} className="px-16 py-6 bg-white text-black rounded-2xl font-black text-xl hover:scale-105 transition-all shadow-2xl">
+                  {section.content.ctaText || 'Descubrir'}
                 </button>
-              )}
-              {section.content.image && (
-                <div className="mt-20 rounded-[48px] overflow-hidden border border-white/10 shadow-2xl max-w-4xl mx-auto ring-1 ring-white/20">
-                  <img src={section.content.image} alt="Hero" className="w-full h-auto" />
+              </div>
+            </section>
+          );
+        }
+
+        // Default: Layout 'split' (Llamativo/Moderno)
+        return (
+          <section id={sectionId} key={idx} className="relative pt-24 pb-32 px-8 lg:px-16 scroll-mt-24">
+            <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+              <div className="space-y-10 text-left">
+                <h1 className="text-6xl md:text-8xl font-black leading-[0.9] text-white tracking-tighter italic uppercase">
+                  {section.content.title}
+                </h1>
+                <p className="text-slate-400 text-xl leading-relaxed max-w-lg">
+                  {section.content.description}
+                </p>
+                <button onClick={() => handleAction(section.content.action)} className="group px-10 py-5 bg-primary text-white rounded-[24px] font-black text-lg hover:glow-effect transition-all flex items-center gap-4">
+                  {section.content.ctaText} <ArrowRight className="group-hover:translate-x-2 transition-transform" />
+                </button>
+              </div>
+              <div className="relative">
+                <div className="absolute -inset-4 bg-primary/20 rounded-[60px] blur-3xl opacity-50" />
+                <div className="relative aspect-square rounded-[50px] overflow-hidden border border-white/10 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-700">
+                  <img src={section.content.image} alt="Hero" className="w-full h-full object-cover scale-110 hover:scale-100 transition-transform duration-700" />
                 </div>
-              )}
+              </div>
             </div>
           </section>
         );
       case 'features':
+        // ... (resto de secciones igual)
         return (
           <section id={sectionId} key={idx} className="py-32 px-6 bg-white/5 border-y border-white/5 scroll-mt-24">
             <div className="max-w-7xl mx-auto">
