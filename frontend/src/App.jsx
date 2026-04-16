@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Home } from './core/landing/pages/Home';
 import Login from './core/auth/pages/Login';
+import SelectTenant from './core/auth/pages/SelectTenant';
 import Register from './core/auth/pages/Register';
 import DashboardLayout from './core/dashboard/components/DashboardLayout';
 import DashboardHome from './core/dashboard/pages/DashboardHome';
@@ -75,6 +76,7 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/select-tenant" element={<SelectTenant />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

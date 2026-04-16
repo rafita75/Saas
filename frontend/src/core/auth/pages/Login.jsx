@@ -19,21 +19,31 @@ export default function Login() {
     try {
       const response = await api.post('/auth/login', { email, password });
       
-      const { token, user, tenant } = response.data;
+      const { token, user, tenants, tenant } = response.data;
 
       setCookie('token', token);
       setCookie('user', JSON.stringify(user));
-      setCookie('tenant', JSON.stringify(tenant));
+      setCookie('tenants', JSON.stringify(tenants));
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('tenant', JSON.stringify(tenant));
+      localStorage.setItem('tenants', JSON.stringify(tenants));
+
+      // Si tiene múltiples negocios, ir a la pantalla de selección
+      if (tenants.length > 1) {
+        window.location.href = '/select-tenant';
+        return;
+      }
+
+      // Si solo tiene uno, guardar como tenant actual y redirigir
+      const selectedTenant = tenants[0] || tenant;
+      setCookie('tenant', JSON.stringify(selectedTenant));
+      localStorage.setItem('tenant', JSON.stringify(selectedTenant));
       
-      // ✅ Redirección condicional: si ya completó onboarding, va al dashboard
-      if (tenant.hasCompletedOnboarding) {
-        window.location.href = `${getAdminUrl(tenant.slug)}/dashboard`;
+      if (selectedTenant.hasCompletedOnboarding) {
+        window.location.href = `${getAdminUrl(selectedTenant.slug)}/dashboard`;
       } else {
-        window.location.href = `${getAdminUrl(tenant.slug)}/onboarding`;
+        window.location.href = `${getAdminUrl(selectedTenant.slug)}/onboarding`;
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Error al iniciar sesión');

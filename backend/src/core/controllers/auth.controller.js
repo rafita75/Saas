@@ -8,14 +8,15 @@ import { generateToken } from '../utils/jwt.js';
 import { generateUniqueSlug } from '../utils/slug.js';
 import { validatePasswordStrength } from '../utils/password.js';
 
-export const register = async (req, res) => {
+import { asyncHandler } from '../middleware/error.middleware.js';
+
+export const register = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     let { fullName, businessName, email, password } = req.body;
     
-    // ✅ Corregido: usar let en lugar de const
     email = email?.trim().toLowerCase();
     
     if (!email || !password) {
@@ -96,172 +97,148 @@ export const register = async (req, res) => {
     });
   } catch (error) {
     await session.abortTransaction();
-    console.error('Error en registro:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al crear la cuenta',
-    });
+    throw error; // Deja que asyncHandler lo maneje
   } finally {
     session.endSession();
   }
-};
+});
 
-export const login = async (req, res) => {
-  try {
-    let { email, password } = req.body;
-    
-    email = email?.trim().toLowerCase();
-    
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email y contraseña son requeridos',
-      });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Email o contraseña incorrectos',
-      });
-    }
-
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        error: 'Email o contraseña incorrectos',
-      });
-    }
-
-    const tenantUser = await TenantUser.findOne({ userId: user._id }).populate('tenantId');
-    
-    if (!tenantUser || !tenantUser.tenantId) {
-      return res.status(404).json({
-        success: false,
-        error: 'No se encontró un negocio asociado a tu cuenta',
-      });
-    }
-
-    const tenant = tenantUser.tenantId;
-
-    user.lastLogin = new Date();
-    await user.save();
-
-    const token = generateToken({
-      userId: user._id,
-      tenantId: tenant._id,
-      slug: tenant.slug,
-    });
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-
-    await Session.create({
-      userId: user._id,
-      tenantId: tenant._id,
-      token,
-      ip: req.ip,
-      userAgent: req.headers['user-agent'],
-      expiresAt,
-    });
-
-    res.json({
-      success: true,
-      token,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        avatar: user.avatar,
-      },
-      tenant: {
-        id: tenant._id,
-        name: tenant.name,
-        slug: tenant.slug,
-        logo: tenant.logo,
-        hasCompletedOnboarding: tenant.hasCompletedOnboarding || false, // ✅ Agregado
-      },
-      role: tenantUser.role,
-    });
-  } catch (error) {
-    console.error('Error en login:', error);
-    res.status(500).json({
+export const login = asyncHandler(async (req, res) => {
+  let { email, password } = req.body;
+  
+  email = email?.trim().toLowerCase();
+  
+  if (!email || !password) {
+    return res.status(400).json({
       success: false,
-      error: 'Error al iniciar sesión',
+      error: 'Email y contraseña son requeridos',
     });
   }
-};
 
-export const logout = async (req, res) => {
-  try {
-    const token = req.token;
-
-    if (token) {
-      await Session.deleteOne({ token });
-    }
-
-    res.json({
-      success: true,
-      message: 'Sesión cerrada correctamente',
-    });
-  } catch (error) {
-    console.error('Error en logout:', error);
-    res.status(500).json({
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(401).json({
       success: false,
-      error: 'Error al cerrar sesión',
+      error: 'Email o contraseña incorrectos',
     });
   }
-};
 
-export const logoutAll = async (req, res) => {
-  try {
-    // ✅ Corregido: usar authenticatedTenant o tenant
-    const tenantId = req.authenticatedTenant?._id || req.tenant?._id;
-    
-    if (!tenantId) {
-      return res.status(400).json({
-        success: false,
-        error: 'No se pudo determinar el negocio',
-      });
-    }
-
-    await Session.deleteMany({
-      userId: req.user._id,
-      tenantId: tenantId,
-    });
-
-    res.json({
-      success: true,
-      message: 'Sesión cerrada en todos los dispositivos',
-    });
-  } catch (error) {
-    console.error('Error en logoutAll:', error);
-    res.status(500).json({
+  const isPasswordValid = await user.comparePassword(password);
+  if (!isPasswordValid) {
+    return res.status(401).json({
       success: false,
-      error: 'Error al cerrar todas las sesiones',
+      error: 'Email o contraseña incorrectos',
     });
   }
-};
 
-export const me = async (req, res) => {
-  try {
-    // ✅ Corregido: usar authenticatedTenant o tenant
-    const tenant = req.authenticatedTenant || req.tenant;
-    
-    res.json({
-      success: true,
-      user: req.user,
-      tenant: tenant,
-      role: req.tenantUser?.role,
-      permissions: req.tenantUser?.permissions || [],
-    });
-  } catch (error) {
-    console.error('Error en me:', error);
-    res.status(500).json({
+  const tenantUsers = await TenantUser.find({ userId: user._id }).populate('tenantId');
+  
+  if (tenantUsers.length === 0) {
+    return res.status(404).json({
       success: false,
-      error: 'Error al obtener datos del usuario',
+      error: 'No se encontró un negocio asociado a tu cuenta',
     });
   }
-};
+
+  // Filtrar tenants válidos
+  const validTenants = tenantUsers
+    .filter(tu => tu.tenantId)
+    .map(tu => ({
+      id: tu.tenantId._id,
+      name: tu.tenantId.name,
+      slug: tu.tenantId.slug,
+      logo: tu.tenantId.logo,
+      hasCompletedOnboarding: tu.tenantId.hasCompletedOnboarding || false,
+      role: tu.role
+    }));
+
+  if (validTenants.length === 0) {
+    return res.status(404).json({
+      success: false,
+      error: 'Tus negocios asociados no están disponibles',
+    });
+  }
+
+  // Por defecto, usar el primer tenant para el token inicial
+  const tenant = validTenants[0];
+
+  user.lastLogin = new Date();
+  await user.save();
+
+  const token = generateToken({
+    userId: user._id,
+    tenantId: tenant.id,
+    slug: tenant.slug,
+  });
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+
+  await Session.create({
+    userId: user._id,
+    tenantId: tenant.id,
+    token,
+    ip: req.ip,
+    userAgent: req.headers['user-agent'],
+    expiresAt,
+  });
+
+  res.json({
+    success: true,
+    token,
+    user: {
+      id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      avatar: user.avatar,
+    },
+    tenants: validTenants,
+    tenant: tenant,
+  });
+});
+
+export const logout = asyncHandler(async (req, res) => {
+  const token = req.token;
+
+  if (token) {
+    await Session.deleteOne({ token });
+  }
+
+  res.json({
+    success: true,
+    message: 'Sesión cerrada correctamente',
+  });
+});
+
+export const logoutAll = asyncHandler(async (req, res) => {
+  const tenantId = req.authenticatedTenant?._id || req.tenant?._id;
+  
+  if (!tenantId) {
+    return res.status(400).json({
+      success: false,
+      error: 'No se pudo determinar el negocio',
+    });
+  }
+
+  await Session.deleteMany({
+    userId: req.user._id,
+    tenantId: tenantId,
+  });
+
+  res.json({
+    success: true,
+    message: 'Sesión cerrada en todos los dispositivos',
+  });
+});
+
+export const me = asyncHandler(async (req, res) => {
+  const tenant = req.authenticatedTenant || req.tenant;
+  
+  res.json({
+    success: true,
+    user: req.user,
+    tenant: tenant,
+    role: req.tenantUser?.role,
+    permissions: req.tenantUser?.permissions || [],
+  });
+});

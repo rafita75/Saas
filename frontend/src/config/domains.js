@@ -10,8 +10,13 @@ export const DOMAINS = {
     : import.meta.env.VITE_API_URL || 'http://localhost:3000',
 };
 
-export const getMainUrl = () => `https://${DOMAINS.main}`;
+export const getMainUrl = () => {
+  const protocol = isProduction ? 'https' : 'http';
+  return `${protocol}://${DOMAINS.main}`;
+};
+
 export const getAdminUrl = (slug = '') => {
-  const base = `https://${DOMAINS.admin}`;
+  const protocol = isProduction ? 'https' : 'http';
+  const base = `${protocol}://${DOMAINS.admin}`;
   return slug ? `${base}/${slug}` : base;
 };

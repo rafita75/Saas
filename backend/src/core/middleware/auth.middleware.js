@@ -35,6 +35,7 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
+    // Buscar al usuario
     const user = await User.findById(decoded.userId).select('-password');
     if (!user) {
       return res.status(401).json({ 
@@ -43,7 +44,12 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
-    const tenant = await Tenant.findById(decoded.tenantId);
+    // Determinar el tenant a validar:
+    // 1. El solicitado por la URL (si existe)
+    // 2. El del token (fallback)
+    const tenantIdToValidate = req.requestedTenant?._id || decoded.tenantId;
+
+    const tenant = await Tenant.findById(tenantIdToValidate);
     if (!tenant) {
       return res.status(404).json({ 
         success: false, 
@@ -58,6 +64,7 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
+    // Verificar membresía
     const tenantUser = await TenantUser.findOne({
       tenantId: tenant._id,
       userId: user._id,
@@ -70,9 +77,9 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // ✅ Separar tenant autenticado del solicitado
+    // ✅ Establecer contextos
     req.user = user;
-    req.authenticatedTenant = tenant;  // Tenant del token
+    req.authenticatedTenant = tenant;  // El tenant validado en esta petición
     req.tenantUser = tenantUser;
     req.session = session;
     req.token = token;

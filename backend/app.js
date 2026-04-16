@@ -30,12 +30,12 @@ app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     
-    // Permitir subdominios de jgsystemsgt.com
-    if (origin.endsWith('.jgsystemsgt.com') || origin === 'https://jgsystemsgt.com') {
-      return callback(null, true);
-    }
+    // Regex para jgsystemsgt.com y sus subdominios
+    const productionRegex = /^https?:\/\/(?:[a-z0-9-]+\.)?jgsystemsgt\.com$/;
+    // Regex para localhost y sus subdominios
+    const localRegex = /^https?:\/\/(?:[a-z0-9-]+\.)?localhost:5173$/;
     
-    if (allowedOrigins.includes(origin)) {
+    if (productionRegex.test(origin) || localRegex.test(origin) || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
     

@@ -17,8 +17,18 @@ export const tenantResolver = async (req, res, next) => {
     if (!slug) {
       const hostname = req.headers.host || '';
       const parts = hostname.split('.');
-      if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'admin') {
-        slug = parts[0];
+      const isLocalhost = hostname.includes('localhost');
+      
+      // En localhost: tienda.localhost:3000 (2 partes)
+      // En producción: tienda.midominio.com (3 partes)
+      if (isLocalhost) {
+        if (parts.length >= 2 && parts[0] !== 'localhost' && parts[0] !== 'admin') {
+          slug = parts[0];
+        }
+      } else {
+        if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'admin') {
+          slug = parts[0];
+        }
       }
     }
     
