@@ -1,7 +1,10 @@
 import { Tenant } from "../models/Tenant.js";
 import { TenantUser } from "../models/TenantUser.js";
+import { TenantModule } from "../models/TenantModule.js";
+import { Module } from "../models/Module.js";
 import { User } from "../models/User.js";
 import { asyncHandler } from "../middleware/error.middleware.js";
+import { generateSlug } from "../utils/slug.js";
 
 export const getMyTenants = asyncHandler(async (req, res) => {
   const tenantUsers = await TenantUser.find({ userId: req.user._id }).populate(
@@ -71,18 +74,15 @@ export const updateTenant = asyncHandler(async (req, res) => {
 
 export const updatePublicSlug = asyncHandler(async (req, res) => {
   const { slug } = req.params;
-  const { publicSlug } = req.body;
+  const { publicSlug: rawPublicSlug } = req.body;
   const tenant = req.tenant;
 
-  if (!publicSlug || publicSlug.length < 3) {
+  if (!rawPublicSlug || rawPublicSlug.length < 3) {
     return res.status(400).json({ success: false, error: 'El slug público debe tener al menos 3 caracteres' });
   }
 
-  // Validar formato
-  const slugRegex = /^[a-z0-9-]+$/;
-  if (!slugRegex.test(publicSlug)) {
-    return res.status(400).json({ success: false, error: 'Formato de slug inválido (solo letras, números y guiones)' });
-  }
+  // ✅ Formatear automáticamente (espacios a guiones, etc.)
+  const publicSlug = generateSlug(rawPublicSlug);
 
   // Verificar disponibilidad
   const existing = await Tenant.findOne({ publicSlug, _id: { $ne: tenant._id } });
@@ -247,6 +247,44 @@ export const removeMember = asyncHandler(async (req, res) => {
   await TenantUser.deleteOne({ _id: member._id });
 
   res.json({ success: true, message: "Miembro eliminado correctamente" });
+});
+
+// ✅ NUEVO: Obtener datos públicos del tenant por su publicSlug
+export const getPublicTenant = asyncHandler(async (req, res) => {
+  const { publicSlug } = req.params;
+  
+  const tenant = await Tenant.findOne({ publicSlug, status: 'active' });
+  
+  if (!tenant) {
+    return res.status(404).json({ success: false, error: 'Negocio no encontrado' });
+  }
+
+  // Verificar si tiene el módulo de landing-page o tienda-en-linea activo
+  const activeModules = await TenantModule.find({ 
+    tenantId: tenant._id, 
+    status: 'active' 
+  }).populate('moduleId');
+
+  const hasPublicModule = activeModules.some(m => 
+    ['landing-page', 'tienda-en-linea'].includes(m.moduleId.slug)
+  );
+
+  if (!hasPublicModule) {
+    return res.status(403).json({ 
+      success: false, 
+      error: 'Este negocio no tiene habilitada una página pública' 
+    });
+  }
+
+  res.json({
+    success: true,
+    tenant: {
+      name: tenant.name,
+      logo: tenant.logo,
+      publicSlug: tenant.publicSlug,
+      settings: tenant.settings
+    }
+  });
 });
 
 // ✅ NUEVO: Marcar onboarding como completado

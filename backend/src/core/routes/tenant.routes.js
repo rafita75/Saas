@@ -5,6 +5,7 @@ import { uploadLogo } from '../middleware/upload.middleware.js';
 import {
   getMyTenants,
   getTenant,
+  getPublicTenant, // ✅ Añadido
   updateTenant,
   updatePublicSlug,
   updateLogo,
@@ -16,6 +17,9 @@ import {
 } from '../controllers/tenant.controller.js';
 
 const router = Router();
+
+// ✅ Rutas Públicas (Sin authMiddleware)
+router.get('/public/:publicSlug', getPublicTenant);
 
 // ✅ Ruta para completar onboarding (no requiere slug en URL)
 router.post('/onboarding/complete', authMiddleware, completeOnboarding);

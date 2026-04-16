@@ -20,7 +20,16 @@ const BusinessSettings = () => {
   const [previewLogo, setPreviewLogo] = useState(tenant?.logo || '');
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let { name, value } = e.target;
+    
+    if (name === 'publicSlug') {
+      // Formatear slug en tiempo real (reemplazar espacios por guiones)
+      value = value.toLowerCase()
+                   .replace(/\s+/g, '-')           // Espacios a guiones
+                   .replace(/[^a-z0-9-]/g, '');    // Solo letras, números y guiones
+    }
+    
+    setFormData({ ...formData, [name]: value });
     setSuccess(false);
   };
 

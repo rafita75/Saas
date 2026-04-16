@@ -6,6 +6,7 @@ import Register from './core/auth/pages/Register';
 import DashboardLayout from './core/dashboard/components/DashboardLayout';
 import DashboardHome from './core/dashboard/pages/DashboardHome';
 import BusinessSettings from './core/dashboard/pages/BusinessSettings';
+import PublicLanding from './core/landing/pages/PublicLanding'; // ✅ Añadido
 import SelectModules from './core/onboarding/pages/SelectModules';
 import { ProtectedRoute } from './core/auth/components/ProtectedRoute';
 import { AuthProvider } from './core/auth/context/AuthContext';
@@ -40,8 +41,33 @@ function App() {
 
 function AppRoutes() {
   const hostname = window.location.hostname;
+  const parts = hostname.split('.');
   const isAdmin = hostname.startsWith('admin.');
+  const isLocalhost = hostname.includes('localhost');
 
+  // Detectar Subdominio Público
+  // En producción (3 partes): tienda.jgsystemsgt.com
+  // En localhost (2 partes): tienda.localhost
+  let publicSlug = null;
+  if (!isAdmin) {
+    if (isLocalhost && parts.length >= 2 && parts[0] !== 'localhost') {
+      publicSlug = parts[0];
+    } else if (!isLocalhost && parts.length >= 3 && parts[0] !== 'www') {
+      publicSlug = parts[0];
+    }
+  }
+
+  // 1. Si es subdominio de tienda, cargar la landing del cliente
+  if (publicSlug) {
+    return (
+      <Routes>
+        <Route path="/" element={<PublicLanding />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    );
+  }
+
+  // 2. Si es subdominio admin, cargar el dashboard
   if (isAdmin) {
     const tenant = parseSessionJSON('tenant', {});
     const slug = tenant.slug || '';
