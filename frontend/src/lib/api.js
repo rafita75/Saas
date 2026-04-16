@@ -1,13 +1,11 @@
 import axios from 'axios';
 import { clearAuthCookies, getSessionData } from './cookies';
-import { getMainUrl } from '../config/domains';
+import { getMainUrl, API_URL } from '../config/domains';
 
 // ✅ Función para obtener token (cookie primero, luego localStorage)
 const getToken = () => {
   return getSessionData('token');
 };
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,

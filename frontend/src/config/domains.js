@@ -2,54 +2,40 @@
 const isProduction = import.meta.env.PROD;
 const hostname = window.location.hostname;
 
-// Si estamos en producción pero no es el dominio final (ej. onrender.com)
-// usamos el dominio actual como base.
-const getBaseDomain = () => {
-  if (!isProduction) return 'localhost:5173';
-  
-  if (hostname === 'jgsystemsgt.com' || hostname.endsWith('.jgsystemsgt.com')) {
-    return 'jgsystemsgt.com';
-  }
+// 1. Configuración de la API (Render Backend)
+// Forzamos la URL de Render para el backend, ya que el frontend está en Vercel
+export const API_URL = 'https://saas-cohr.onrender.com';
 
-  // Fallback para Render/Vercel: usar el dominio actual quitando subdominios si los hay
-  const parts = hostname.split('.');
-  if (parts.length >= 2) {
-    const base = parts.slice(-2).join('.');
-    return base;
-  }
-  
-  return hostname;
-};
-
-const BASE_DOMAIN = getBaseDomain();
+// 2. Detectar si estamos en el dominio oficial
+const isOfficialDomain = hostname === 'jgsystemsgt.com' || hostname.endsWith('.jgsystemsgt.com');
 
 export const DOMAINS = {
-  main: BASE_DOMAIN,
-  admin: BASE_DOMAIN === 'localhost:5173' ? `admin.${BASE_DOMAIN}` : `admin.${BASE_DOMAIN}`,
-  api: import.meta.env.VITE_API_URL || (isProduction ? `https://api.${BASE_DOMAIN}` : 'http://localhost:3000'),
+  main: hostname,
+  // Solo usamos subdominio 'admin.' si estamos en el dominio oficial final.
+  // En Vercel o Localhost, usamos el mismo dominio base para evitar problemas de cookies.
+  admin: isOfficialDomain ? `admin.jgsystemsgt.com` : hostname,
+  api: API_URL,
 };
 
-// Ajuste especial para Render donde la API suele estar en un subdominio diferente o URL distinta
-if (hostname.includes('onrender.com')) {
-  DOMAINS.api = 'https://saas-cohr.onrender.com'; // URL específica del usuario
-}
-
 export const getMainUrl = () => {
-  const protocol = isProduction ? 'https' : 'http';
-  // En localhost no usamos subdominios para la landing
-  return `${protocol}://${DOMAINS.main}`;
+  const protocol = window.location.protocol;
+  // Si estamos en admin.jgsystemsgt.com, el main es jgsystemsgt.com
+  if (isOfficialDomain && hostname.startsWith('admin.')) {
+    return `${protocol}//jgsystemsgt.com`;
+  }
+  return `${protocol}//${hostname}`;
 };
 
 export const getAdminUrl = (slug = '') => {
-  const protocol = isProduction ? 'https' : 'http';
-  
-  // En entornos de prueba como Render, no usamos subdominio 'admin.' 
-  // porque rompe las cookies/localStorage.
-  if (hostname.includes('onrender.com')) {
-    const base = `${protocol}://${hostname}`;
+  const protocol = window.location.protocol;
+
+  // Si estamos en el dominio oficial, usamos el subdominio admin
+  if (isOfficialDomain) {
+    const base = `${protocol}//admin.jgsystemsgt.com`;
     return slug ? `${base}/${slug}` : base;
   }
 
-  const base = `${protocol}://${DOMAINS.admin}`;
+  // En Vercel o Localhost, nos quedamos en el mismo dominio actual
+  const base = `${protocol}//${hostname}`;
   return slug ? `${base}/${slug}` : base;
 };
