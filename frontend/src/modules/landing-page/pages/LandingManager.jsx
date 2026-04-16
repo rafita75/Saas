@@ -4,26 +4,40 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../../core/auth/context/AuthContext';
 import api from '../../../lib/api';
 import { getPublicUrl } from '../../../config/domains';
+import Toast from '../../../shared/components/Toast';
 
 const LandingManager = () => {
   const { tenant } = useAuth();
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+
+  const fetchPages = async () => {
+    try {
+      const response = await api.get('/landings');
+      setPages(response.data.landings);
+    } catch (err) {
+      console.error('Error al cargar páginas');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPages = async () => {
-      try {
-        const response = await api.get('/landings');
-        setPages(response.data.landings);
-      } catch (err) {
-        console.error('Error al cargar páginas');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (tenant?.slug) fetchPages();
   }, [tenant?.slug]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta página? No se podrá recuperar.')) return;
+
+    try {
+      await api.delete(`/landings/${id}`);
+      setToast({ message: 'Página eliminada correctamente', type: 'success' });
+      fetchPages();
+    } catch (err) {
+      setToast({ message: 'Error al eliminar la página', type: 'error' });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -57,7 +71,6 @@ const LandingManager = () => {
         ) : (
           pages.map(page => (
             <div key={page._id} className="glass rounded-2xl border border-white/5 overflow-hidden group hover:border-primary/30 transition-all">
-              {/* Aquí irá una miniatura o preview */}
               <div className="aspect-video bg-dark-800 flex items-center justify-center border-b border-white/5">
                 <Globe size={40} className="text-slate-700 group-hover:text-primary/30 transition-all" />
               </div>
@@ -65,24 +78,29 @@ const LandingManager = () => {
               <div className="p-5 space-y-4">
                 <div>
                   <h4 className="text-lg font-bold text-white truncate">{page.name}</h4>
-                  <p className="text-slate-500 text-xs font-mono">{getPublicUrl(tenant?.publicSlug)}{page.path}</p>
+                  <p className="text-slate-500 text-xs font-mono">
+                    {getPublicUrl(tenant?.publicSlug)}{page.path === '/' ? '' : page.path}
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
                   <div className="flex gap-2">
                     <Link 
                       to={`/${tenant?.slug}/landings/${page._id}/edit`}
-                      className="p-2 bg-dark-700 text-slate-300 rounded-lg hover:text-white hover:bg-dark-600 transition-all"
+                      className="p-2 bg-dark-800 text-slate-300 rounded-lg hover:text-white hover:bg-dark-700 transition-all border border-white/5"
                     >
                       <Edit3 size={18} />
                     </Link>
-                    <button className="p-2 bg-dark-700 text-slate-300 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-all">
+                    <button 
+                      onClick={() => handleDelete(page._id)}
+                      className="p-2 bg-dark-800 text-slate-300 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-all border border-white/5"
+                    >
                       <Trash2 size={18} />
                     </button>
                   </div>
                   
                   <a 
-                    href={getPublicUrl(tenant?.publicSlug)} 
+                    href={`${getPublicUrl(tenant?.publicSlug)}${page.path === '/' ? '' : page.path}`}
                     target="_blank" 
                     rel="noreferrer"
                     className="flex items-center gap-1 text-xs text-primary hover:underline font-bold"
@@ -95,6 +113,7 @@ const LandingManager = () => {
           ))
         )}
       </div>
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
     </div>
   );
 };

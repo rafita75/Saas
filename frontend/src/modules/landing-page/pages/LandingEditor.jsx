@@ -60,6 +60,7 @@ const LandingEditor = () => {
     setPageData({
       ...pageData,
       name: `Página ${template.name}`,
+      path: '', 
       sections: template.sections.map(s => ({ ...s, content: { ...s.content } })),
       theme: template.theme,
       templateId: template.id
