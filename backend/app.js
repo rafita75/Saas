@@ -13,6 +13,9 @@ dotenv.config();
 
 const app = express();
 
+// ✅ Habilitar trust proxy para Render/Cloud (necesario para express-rate-limit)
+app.set('trust proxy', 1);
+
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
