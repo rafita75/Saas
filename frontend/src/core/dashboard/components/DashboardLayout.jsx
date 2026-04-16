@@ -40,6 +40,7 @@ const DashboardLayout = () => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: `/dashboard` },
+    { icon: Users, label: 'Equipo', path: `/team` },
     { icon: Settings, label: 'Configuración', path: `/settings` },
   ];
 

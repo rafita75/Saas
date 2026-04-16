@@ -6,6 +6,7 @@ import Register from './core/auth/pages/Register';
 import DashboardLayout from './core/dashboard/components/DashboardLayout';
 import DashboardHome from './core/dashboard/pages/DashboardHome';
 import BusinessSettings from './core/dashboard/pages/BusinessSettings';
+import TeamSettings from './core/dashboard/pages/TeamSettings';
 import PublicLanding from './core/landing/pages/PublicLanding'; // ✅ Añadido
 import SelectModules from './core/onboarding/pages/SelectModules';
 import { ProtectedRoute } from './core/auth/components/ProtectedRoute';
@@ -88,6 +89,7 @@ function AppRoutes() {
         }>
           <Route index element={<DashboardHome />} />
           <Route path="dashboard" element={<DashboardHome />} />
+          <Route path="team" element={<TeamSettings />} />
           <Route path="settings" element={<BusinessSettings />} />
         </Route>
         
