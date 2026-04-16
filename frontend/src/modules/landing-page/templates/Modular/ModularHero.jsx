@@ -1,11 +1,11 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
+import EditableText from '../../builder/components/EditableText';
 
 /**
  * ModularHero: Réplica 1:1 del diseño SaaS de Stitch (screen.png).
- * Diseño con badge flotante, título tipográfico masivo y mockup lateral.
  */
-const ModularHero = ({ content, theme = {}, handleAction, isEditor = false }) => {
+const ModularHero = ({ content, theme = {}, handleAction, isPreview = false }) => {
   const { 
     badge = 'POWERED BY J&M SYSTEMS',
     title = 'La estructura modular para el éxito empresarial.',
@@ -24,31 +24,31 @@ const ModularHero = ({ content, theme = {}, handleAction, isEditor = false }) =>
         {/* Text Content */}
         <div className="lg:w-3/5 space-y-10 text-left">
           <div className="inline-block px-4 py-1.5 bg-indigo-50 border border-indigo-100 rounded-full">
-            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">{badge}</span>
+            <EditableText field="badge" value={badge} as="span" className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]" isPreview={isPreview} />
           </div>
 
-          <h1 className="text-6xl lg:text-[5.5rem] font-bold text-slate-950 leading-[0.95] tracking-tight">
-            {title.split(' ').map((word, i) => (
-              <span key={i} className={word.toLowerCase() === 'modular' ? 'text-indigo-600' : ''}>{word} </span>
-            ))}
-          </h1>
+          <EditableText 
+            field="title" 
+            value={title} 
+            as="h1" 
+            className="text-6xl lg:text-[5.5rem] font-bold text-slate-950 leading-[0.95] tracking-tight" 
+            isPreview={isPreview} 
+          />
 
-          <p className="text-slate-500 text-xl font-medium leading-relaxed max-w-xl">
-            {description}
-          </p>
+          <EditableText 
+            field="description" 
+            value={description} 
+            as="p" 
+            className="text-slate-500 text-xl font-medium leading-relaxed max-w-xl" 
+            isPreview={isPreview} 
+          />
 
           <div className="flex flex-wrap gap-4 pt-4">
-            <button 
-              onClick={() => handleAction(action)}
-              className="px-10 py-5 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all active:scale-95"
-            >
-              {ctaText}
+            <button className="px-10 py-5 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all active:scale-95">
+              <EditableText field="ctaText" value={ctaText} as="span" isPreview={isPreview} />
             </button>
-            <button 
-              onClick={() => handleAction(secondaryAction)}
-              className="px-10 py-5 bg-slate-100 text-slate-900 rounded-2xl font-bold text-lg hover:bg-slate-200 transition-all"
-            >
-              {secondaryCtaText}
+            <button className="px-10 py-5 bg-slate-100 text-slate-900 rounded-2xl font-bold text-lg hover:bg-slate-200 transition-all">
+              <EditableText field="secondaryCtaText" value={secondaryCtaText} as="span" isPreview={isPreview} />
             </button>
           </div>
         </div>
