@@ -1,4 +1,5 @@
 import { LandingPage } from '../../core/models/LandingPage.js';
+import { Tenant } from '../../core/models/Tenant.js'; // ✅ Añadido
 import { TenantModule } from '../../core/models/TenantModule.js';
 import { asyncHandler } from '../../core/middleware/error.middleware.js';
 
