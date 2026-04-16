@@ -4,8 +4,10 @@ import { Sparkles, Building2, ArrowRight, LogOut, LayoutDashboard } from 'lucide
 import api from '../../../lib/api';
 import { parseSessionJSON, setCookie } from '../../../lib/cookies';
 import { getAdminUrl, getMainUrl } from '../../../config/domains';
+import { useAuth } from '../context/AuthContext';
 
 export default function SelectTenant() {
+  const { logout: clearAuth } = useAuth();
   const [tenants, setTenants] = useState([]);
   const [user, setUser] = useState(null);
 
@@ -36,11 +38,10 @@ export default function SelectTenant() {
   const handleLogout = async () => {
     try {
       await api.post('/auth/logout');
-      localStorage.clear();
+      clearAuth();
       window.location.href = '/login';
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-      localStorage.clear();
+      clearAuth();
       window.location.href = '/login';
     }
   };

@@ -7,6 +7,7 @@ import DashboardLayout from './core/dashboard/components/DashboardLayout';
 import DashboardHome from './core/dashboard/pages/DashboardHome';
 import SelectModules from './core/onboarding/pages/SelectModules';
 import { ProtectedRoute } from './core/auth/components/ProtectedRoute';
+import { AuthProvider } from './core/auth/context/AuthContext';
 import { parseSessionJSON } from './lib/cookies';
 import { getMainUrl, getAdminUrl } from './config/domains';
 
@@ -29,6 +30,14 @@ const SlugValidator = ({ children }) => {
 };
 
 function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
+}
+
+function AppRoutes() {
   const hostname = window.location.hostname;
   const isAdmin = hostname.startsWith('admin.');
 

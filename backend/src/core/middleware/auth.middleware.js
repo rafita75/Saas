@@ -12,7 +12,8 @@ export const invalidateAuthCache = () => {};
  */
 export const authMiddleware = async (req, res, next) => {
   try {
-    const token = extractTokenFromHeader(req.headers.authorization);
+    // Intentar obtener token de cookie o header
+    const token = req.cookies?.token || extractTokenFromHeader(req.headers.authorization);
     
     if (!token) {
       return res.status(401).json({ success: false, error: 'No autorizado' });

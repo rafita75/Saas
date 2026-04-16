@@ -4,8 +4,10 @@ import { Sparkles, User, Building2, Mail, Lock, ArrowRight, Rocket } from 'lucid
 import api from '../../../lib/api';
 import { setCookie } from '../../../lib/cookies';
 import { getAdminUrl } from '../../../config/domains';
+import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
+  const { login: setAuth } = useAuth();
   const [form, setForm] = useState({
     fullName: '',
     businessName: '',
@@ -27,13 +29,14 @@ export default function Register() {
     try {
       const response = await api.post('/auth/register', form);
       
-      const { token, user, tenant } = response.data;
+      const { user, tenant } = response.data;
 
-      setCookie('token', token);
+      // Actualizar contexto global
+      setAuth(user, tenant);
+
       setCookie('user', JSON.stringify(user));
       setCookie('tenant', JSON.stringify(tenant));
       
-      localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('tenant', JSON.stringify(tenant));
       

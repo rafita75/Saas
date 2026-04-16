@@ -4,8 +4,10 @@ import { Sparkles, Mail, Lock, ArrowRight, LogIn } from 'lucide-react';
 import api from '../../../lib/api';
 import { setCookie } from '../../../lib/cookies';
 import { getAdminUrl } from '../../../config/domains';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
+  const { login: setAuth } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,13 +21,15 @@ export default function Login() {
     try {
       const response = await api.post('/auth/login', { email, password });
       
-      const { token, user, tenants, tenant } = response.data;
+      const { user, tenants, tenant } = response.data;
 
-      setCookie('token', token);
+      // Actualizar contexto global
+      setAuth(user, tenant);
+
+      // Guardar metadatos (el token es HttpOnly, no lo guardamos nosotros)
       setCookie('user', JSON.stringify(user));
       setCookie('tenants', JSON.stringify(tenants));
       
-      localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('tenants', JSON.stringify(tenants));
 

@@ -92,9 +92,16 @@ export const register = asyncHandler(async (req, res) => {
 
     await session.commitTransaction();
 
+    // Configuración de cookie para comunicación Vercel <-> Render
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(201).json({
       success: true,
-      token, // ✅ Enviar token de vuelta
       user: { id: user._id, fullName: user.fullName, email: user.email },
       tenant: { id: tenant._id, name: tenant.name, slug: tenant.slug },
     });
@@ -140,9 +147,16 @@ export const login = asyncHandler(async (req, res) => {
   const tenant = validTenants[0];
   const token = generateToken({ userId: user._id, tenantId: tenant.id, slug: tenant.slug });
 
+  // Configuración de cookie para comunicación Vercel <-> Render
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
   res.json({
     success: true,
-    token,
     user: { id: user._id, fullName: user.fullName, email: user.email },
     tenants: validTenants,
     tenant: tenant
