@@ -30,72 +30,42 @@ const SlugValidator = ({ children }) => {
 
 function App() {
   const hostname = window.location.hostname;
-  const isOfficialDomain = hostname === 'jgsystemsgt.com' || hostname.endsWith('.jgsystemsgt.com');
-  const isAdminSubdomain = hostname.startsWith('admin.');
-  // Entornos como Render, Vercel o Localhost (cuando no es el dominio oficial)
-  const isAlternativeEnv = !isOfficialDomain;
+  const isAdmin = hostname.startsWith('admin.');
 
-  const tenant = parseSessionJSON('tenant', {});
-  const slug = tenant.slug || '';
+  if (isAdmin) {
+    const tenant = parseSessionJSON('tenant', {});
+    const slug = tenant.slug || '';
 
-  // Determinar si debemos mostrar el Dashboard o la Landing
-  // Mostramos Dashboard si:
-  // 1. Estamos en el subdominio admin.
-  // 2. O estamos en un entorno alternativo (Render) Y la ruta no es de la landing.
-  const isDashboardPath = window.location.pathname !== '/' && 
-                         window.location.pathname !== '/login' && 
-                         window.location.pathname !== '/register' &&
-                         window.location.pathname !== '/select-tenant';
-
-  if (isAdminSubdomain || (isAlternativeEnv && isDashboardPath && slug)) {
+    // Si no hay slug en la sesión, forzar login en el dominio principal
+    if (!slug) {
+      return <ExternalRedirect to={`${getMainUrl()}/login`} />;
+    }
+    
     return (
       <Routes>
-        {/* Onboarding */}
         <Route path="/:slug/onboarding" element={
-          <ProtectedRoute>
-            <SlugValidator>
-              <SelectModules />
-            </SlugValidator>
-          </ProtectedRoute>
+          <ProtectedRoute><SlugValidator><SelectModules /></SlugValidator></ProtectedRoute>
         } />
         
-        {/* Dashboard */}
         <Route path="/:slug/*" element={
-          <ProtectedRoute>
-            <SlugValidator>
-              <DashboardLayout />
-            </SlugValidator>
-          </ProtectedRoute>
+          <ProtectedRoute><SlugValidator><DashboardLayout /></SlugValidator></ProtectedRoute>
         }>
           <Route index element={<DashboardHome />} />
           <Route path="dashboard" element={<DashboardHome />} />
         </Route>
         
-        {/* Rutas de autenticación (accesibles por si acaso) */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/select-tenant" element={<SelectTenant />} />
-        
-        {/* Redirecciones base del dashboard */}
-        <Route path="/" element={<ExternalRedirect to={getAdminUrl(slug ? `${slug}/dashboard` : '')} />} />
+        <Route path="/" element={<ExternalRedirect to={`${getAdminUrl(slug)}/dashboard`} />} />
         <Route path="*" element={<ExternalRedirect to={`${getMainUrl()}/login`} />} />
       </Routes>
     );
   }
 
-  // Rutas de la Landing / Auth Principal
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/select-tenant" element={<SelectTenant />} />
-      {/* Capturar rutas de dashboard que se escapen (ej. links directos en Render) */}
-      <Route path="/:slug/*" element={
-        <ProtectedRoute>
-          <DashboardLayout />
-        </ProtectedRoute>
-      } />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

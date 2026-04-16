@@ -107,45 +107,21 @@ export const register = asyncHandler(async (req, res) => {
 });
 
 export const login = asyncHandler(async (req, res) => {
-  // Leer de req.validData (Zod) si existe, fallback a req.body
   const data = req.validData?.body || req.body;
   let { email, password } = data;
   
   email = email?.trim().toLowerCase();
   
   if (!email || !password) {
-    return res.status(400).json({
-      success: false,
-      error: 'Email y contraseña son requeridos',
-    });
+    return res.status(400).json({ success: false, error: 'Email y contraseña son requeridos' });
   }
 
   const user = await User.findOne({ email });
-  if (!user) {
-    return res.status(401).json({
-      success: false,
-      error: 'Email o contraseña incorrectos',
-    });
-  }
-
-  const isPasswordValid = await user.comparePassword(password);
-  if (!isPasswordValid) {
-    return res.status(401).json({
-      success: false,
-      error: 'Email o contraseña incorrectos',
-    });
+  if (!user || !(await user.comparePassword(password))) {
+    return res.status(401).json({ success: false, error: 'Email o contraseña incorrectos' });
   }
 
   const tenantUsers = await TenantUser.find({ userId: user._id }).populate('tenantId');
-  
-  if (tenantUsers.length === 0) {
-    return res.status(404).json({
-      success: false,
-      error: 'No se encontró un negocio asociado a tu cuenta',
-    });
-  }
-
-  // Filtrar tenants válidos
   const validTenants = tenantUsers
     .filter(tu => tu.tenantId)
     .map(tu => ({
@@ -158,64 +134,27 @@ export const login = asyncHandler(async (req, res) => {
     }));
 
   if (validTenants.length === 0) {
-    return res.status(404).json({
-      success: false,
-      error: 'Tus negocios asociados no están disponibles',
-    });
+    return res.status(404).json({ success: false, error: 'No tienes negocios asociados' });
   }
 
-  // Por defecto, usar el primer tenant para el token inicial
   const tenant = validTenants[0];
-
-  user.lastLogin = new Date();
-  await user.save();
-
-  const token = generateToken({
-    userId: user._id,
-    tenantId: tenant.id,
-    slug: tenant.slug,
-  });
-
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7);
-
-  await Session.create({
-    userId: user._id,
-    tenantId: tenant.id,
-    token,
-    ip: req.ip,
-    userAgent: req.headers['user-agent'],
-    expiresAt,
-  });
+  const token = generateToken({ userId: user._id, tenantId: tenant.id, slug: tenant.slug });
 
   res.json({
     success: true,
-    token, // ✅ Enviar token de vuelta
-    user: {
-      id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      avatar: user.avatar,
-    },
+    token,
+    user: { id: user._id, fullName: user.fullName, email: user.email },
     tenants: validTenants,
-    tenant: tenant,
+    tenant: tenant
   });
 });
 
 export const logout = asyncHandler(async (req, res) => {
-  const token = req.token;
-
-  if (token) {
-    await Session.deleteOne({ token });
-    invalidateAuthCache(token);
+  if (req.token) {
+    await Session.deleteOne({ token: req.token });
+    invalidateAuthCache(req.token);
   }
-
-  res.clearCookie('token');
-
-  res.json({
-    success: true,
-    message: 'Sesión cerrada correctamente',
-  });
+  res.json({ success: true, message: 'Sesión cerrada' });
 });
 
 export const logoutAll = asyncHandler(async (req, res) => {

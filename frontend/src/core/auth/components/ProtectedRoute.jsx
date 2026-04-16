@@ -22,19 +22,11 @@ const isSessionValid = () => {
   const user = getSessionData('user');
   const tenant = getSessionData('tenant');
   
-  // Validar presencia básica
-  if (!token || !user) return false;
+  // Validar presencia absoluta
+  if (!token || !user || !tenant) return false;
   
-  // Validar expiración del token si existe
-  if (token && isTokenExpired(token)) return false;
-  
-  // Si estamos en una ruta de dashboard, el tenant es obligatorio
-  const isDashboardPath = window.location.pathname !== '/' && 
-                         !window.location.pathname.startsWith('/login') && 
-                         !window.location.pathname.startsWith('/register') &&
-                         !window.location.pathname.startsWith('/select-tenant');
-
-  if (isDashboardPath && !tenant) return false;
+  // Validar expiración del token
+  if (isTokenExpired(token)) return false;
   
   return true;
 };
