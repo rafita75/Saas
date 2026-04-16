@@ -6,6 +6,7 @@ import { Sparkles, Building2, Globe, ArrowRight } from 'lucide-react';
 const PublicLanding = () => {
   const { publicSlug: paramSlug } = useParams();
   const [tenant, setTenant] = useState(null);
+  const [page, setPage] = useState(null); // ✅ Cargar la página real
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -26,8 +27,13 @@ const PublicLanding = () => {
   useEffect(() => {
     const fetchPublicData = async () => {
       try {
-        const response = await api.get(`/tenants/public/${publicSlug}`);
-        setTenant(response.data.tenant);
+        // 1. Obtener datos del tenant
+        const tenantRes = await api.get(`/tenants/public/${publicSlug}`);
+        setTenant(tenantRes.data.tenant);
+
+        // 2. Obtener la landing page principal (path: /)
+        const pageRes = await api.get(`/landings/public/path/root`);
+        setPage(pageRes.data.landing);
       } catch (err) {
         setError(err.response?.data?.error || 'No se pudo cargar la página');
       } finally {
@@ -65,9 +71,81 @@ const PublicLanding = () => {
     );
   }
 
+  // Renderizador de Secciones Dinámicas
+  const renderSection = (section, idx) => {
+    switch (section.type) {
+      case 'hero':
+        return (
+          <section key={idx} className="relative pt-20 pb-32 px-6 overflow-hidden">
+            <div className="max-w-4xl mx-auto text-center relative z-10">
+              <h1 className="text-5xl md:text-7xl font-extrabold mb-8 leading-[1.1] text-white">
+                {section.content.title}
+              </h1>
+              <p className="text-slate-400 text-lg md:text-xl mb-12 max-w-2xl mx-auto">
+                {section.content.description}
+              </p>
+              {section.content.ctaText && (
+                <button className="px-10 py-4 bg-primary text-white rounded-2xl font-bold hover:glow-effect transition-all">
+                  {section.content.ctaText}
+                </button>
+              )}
+              {section.content.image && (
+                <div className="mt-16 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+                  <img src={section.content.image} alt="Hero" className="w-full h-auto" />
+                </div>
+              )}
+            </div>
+          </section>
+        );
+      case 'features':
+        return (
+          <section key={idx} className="py-24 px-6 bg-dark-900/50">
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-3xl font-bold text-center mb-16 text-white">{section.content.title || 'Nuestros Beneficios'}</h2>
+              <div className="grid md:grid-cols-3 gap-8">
+                {section.content.items?.map((item, i) => (
+                  <div key={i} className="p-8 rounded-3xl bg-dark-800 border border-white/5 hover:border-primary/30 transition-all">
+                    <h4 className="text-xl font-bold text-white mb-4">{item.title}</h4>
+                    <p className="text-slate-400 text-sm leading-relaxed">{item.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      case 'contact':
+        return (
+          <section key={idx} className="py-24 px-6">
+            <div className="max-w-2xl mx-auto text-center">
+              <h2 className="text-3xl font-bold mb-4 text-white">{section.content.title}</h2>
+              <p className="text-slate-400 mb-12">{section.content.description}</p>
+              <div className="grid gap-4">
+                {section.content.email && <div className="p-4 bg-dark-800 rounded-2xl border border-white/5 text-primary font-medium">{section.content.email}</div>}
+                {section.content.phone && <div className="p-4 bg-dark-800 rounded-2xl border border-white/5 text-slate-300 font-medium">{section.content.phone}</div>}
+              </div>
+            </div>
+          </section>
+        );
+      case 'cta':
+        return (
+          <section key={idx} className="py-20 px-6 bg-primary/10">
+            <div className="max-w-4xl mx-auto text-center space-y-8">
+              <h2 className="text-4xl font-bold text-white">{section.content.title}</h2>
+              <p className="text-slate-300 text-lg">{section.content.description}</p>
+              <button className="px-8 py-3 bg-white text-black rounded-xl font-bold hover:scale-105 transition-all">
+                {section.content.buttonText || 'Contactar'}
+              </button>
+            </div>
+          </section>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-dark-950 text-white selection:bg-primary/30">
-      {/* Navegación Minimalista */}
+      {/* Navbar */}
       <nav className="h-20 border-b border-white/5 flex items-center justify-between px-6 lg:px-12 backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-dark-800 border border-white/10 flex items-center justify-center overflow-hidden">
@@ -79,45 +157,21 @@ const PublicLanding = () => {
           </div>
           <span className="font-bold text-xl tracking-tight">{tenant.name}</span>
         </div>
-        <button className="hidden md:block px-6 py-2 bg-primary text-white rounded-full font-medium hover:glow-effect transition-all text-sm">
-          Contactar Negocio
-        </button>
       </nav>
 
-      {/* Hero de Prueba */}
-      <main className="relative pt-20 pb-32 px-6 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-full pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-[120px]" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-[120px]" />
-        </div>
-
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-primary text-xs font-bold uppercase tracking-widest mb-8">
-            <Sparkles size={14} /> Módulo Landing Page Activo
+      {/* Contenido Dinámico */}
+      <main>
+        {!page || page.sections.length === 0 ? (
+          <div className="py-40 text-center">
+            <h2 className="text-4xl font-bold text-white mb-4">Bienvenido a {tenant.name}</h2>
+            <p className="text-slate-400">Página en construcción.</p>
           </div>
-          
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-8 leading-[1.1]">
-            Bienvenido a la página de <br />
-            <span className="text-gradient">{tenant.name}</span>
-          </h1>
-          
-          <p className="text-slate-400 text-lg md:text-xl mb-12 max-w-2xl mx-auto leading-relaxed">
-            Esta es una landing page de prueba generada automáticamente por ModularBusiness. 
-            Próximamente podrás personalizar cada sección, colores y contenido desde tu panel de control.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button className="w-full sm:w-auto px-8 py-4 bg-white text-black rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
-              Ver Catálogo <ArrowRight size={20} />
-            </button>
-            <button className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-bold hover:bg-white/10 transition-all">
-              Saber más
-            </button>
-          </div>
-        </div>
+        ) : (
+          page.sections.map((section, idx) => renderSection(section, idx))
+        )}
       </main>
 
-      {/* Footer Minimalista */}
+      {/* Footer */}
       <footer className="py-12 border-t border-white/5 text-center">
         <p className="text-slate-500 text-sm flex items-center justify-center gap-2">
           Potenciado por <Sparkles size={14} className="text-primary" /> <span className="font-bold text-slate-400">ModularBusiness</span>

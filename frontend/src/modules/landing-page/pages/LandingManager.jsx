@@ -11,10 +11,19 @@ const LandingManager = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Aquí cargaremos la lista de páginas desde el backend
-    // Por ahora simulamos una carga vacía
-    setLoading(false);
-  }, []);
+    const fetchPages = async () => {
+      try {
+        const response = await api.get('/landings');
+        setPages(response.data.landings);
+      } catch (err) {
+        console.error('Error al cargar páginas');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (tenant?.slug) fetchPages();
+  }, [tenant?.slug]);
 
   return (
     <div className="space-y-6">
