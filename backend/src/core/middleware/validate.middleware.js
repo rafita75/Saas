@@ -10,10 +10,26 @@ export const validateRequest = (schema) => (req, res, next) => {
       params: req.params,
     });
 
-    // Reemplazar con los datos validados/sanitizados por Zod
-    req.body = validatedData.body || req.body;
-    req.query = validatedData.query || req.query;
-    req.params = validatedData.params || req.params;
+    // Reemplazar solo los objetos que fueron validados (y presentes en el esquema)
+    if (validatedData.body) req.body = validatedData.body;
+    
+    if (validatedData.query) {
+      Object.defineProperty(req, 'query', {
+        value: validatedData.query,
+        writable: true,
+        enumerable: true,
+        configurable: true
+      });
+    }
+    
+    if (validatedData.params) {
+      Object.defineProperty(req, 'params', {
+        value: validatedData.params,
+        writable: true,
+        enumerable: true,
+        configurable: true
+      });
+    }
 
     next();
   } catch (error) {
