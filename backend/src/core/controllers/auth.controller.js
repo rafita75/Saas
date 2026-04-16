@@ -9,6 +9,7 @@ import { generateUniqueSlug } from '../utils/slug.js';
 import { validatePasswordStrength } from '../utils/password.js';
 
 import { asyncHandler } from '../middleware/error.middleware.js';
+import { invalidateAuthCache } from '../middleware/auth.middleware.js';
 
 export const register = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -89,9 +90,16 @@ export const register = asyncHandler(async (req, res) => {
 
     await session.commitTransaction();
 
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+    });
+
     res.status(201).json({
       success: true,
-      token,
       user: { id: user._id, fullName: user.fullName, email: user.email },
       tenant: { id: tenant._id, name: tenant.name, slug: tenant.slug },
     });
@@ -183,9 +191,16 @@ export const login = asyncHandler(async (req, res) => {
     expiresAt,
   });
 
+  const isProd = process.env.NODE_ENV === 'production';
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
   res.json({
     success: true,
-    token,
     user: {
       id: user._id,
       fullName: user.fullName,
@@ -202,7 +217,10 @@ export const logout = asyncHandler(async (req, res) => {
 
   if (token) {
     await Session.deleteOne({ token });
+    invalidateAuthCache(token);
   }
+
+  res.clearCookie('token');
 
   res.json({
     success: true,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Building2, ArrowRight, LogOut, LayoutDashboard } from 'lucide-react';
+import api from '../../../lib/api';
 import { parseSessionJSON, setCookie } from '../../../lib/cookies';
 import { getAdminUrl, getMainUrl } from '../../../config/domains';
 
@@ -32,14 +33,16 @@ export default function SelectTenant() {
     window.location.href = targetUrl;
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    document.cookie.split(";").forEach((c) => {
-      document.cookie = c
-        .replace(/^ +/, "")
-        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-    });
-    window.location.href = '/login';
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+      localStorage.clear();
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      localStorage.clear();
+      window.location.href = '/login';
+    }
   };
 
   if (!user) return null;

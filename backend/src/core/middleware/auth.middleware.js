@@ -3,6 +3,20 @@ import { Session } from '../models/Session.js';
 import { User } from '../models/User.js';
 import { Tenant } from '../models/Tenant.js';
 import { TenantUser } from '../models/TenantUser.js';
+import { LRUCache } from 'lru-cache';
+
+// Configuración de caché para autenticación (5 minutos de TTL)
+const authCache = new LRUCache({
+  max: 500, // Máximo 500 usuarios en caché
+  ttl: 1000 * 60 * 5, // 5 minutos
+});
+
+/**
+ * Invalida la caché de un token específico
+ */
+export const invalidateAuthCache = (token) => {
+  if (token) authCache.delete(token);
+};
 
 /**
  * Middleware de autenticación obligatoria
@@ -10,13 +24,28 @@ import { TenantUser } from '../models/TenantUser.js';
  */
 export const authMiddleware = async (req, res, next) => {
   try {
-    const token = extractTokenFromHeader(req.headers.authorization);
+    // 1. Extraer token (Prioridad: Cookie > Header)
+    let token = req.cookies?.token;
+    if (!token) {
+      token = extractTokenFromHeader(req.headers.authorization);
+    }
     
     if (!token) {
       return res.status(401).json({ 
         success: false, 
         error: 'No se proporcionó token de autenticación' 
       });
+    }
+
+    // 2. Verificar caché
+    const cachedAuth = authCache.get(token);
+    if (cachedAuth) {
+      req.user = cachedAuth.user;
+      req.authenticatedTenant = cachedAuth.authenticatedTenant;
+      req.tenantUser = cachedAuth.tenantUser;
+      req.session = cachedAuth.session;
+      req.token = token;
+      return next();
     }
 
     const decoded = verifyToken(token);
@@ -78,6 +107,16 @@ export const authMiddleware = async (req, res, next) => {
     }
 
     // ✅ Establecer contextos
+    const authData = {
+      user,
+      authenticatedTenant: tenant,
+      tenantUser,
+      session,
+    };
+
+    // Guardar en caché
+    authCache.set(token, authData);
+
     req.user = user;
     req.authenticatedTenant = tenant;  // El tenant validado en esta petición
     req.tenantUser = tenantUser;

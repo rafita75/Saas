@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
+import mongoSanitize from 'express-mongo-sanitize';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import routes from './src/core/routes/index.js';
@@ -45,6 +47,8 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(mongoSanitize());
 
 // Middleware de tenant (intenta resolver el tenant por subdominio)
 app.use(tenantResolver);

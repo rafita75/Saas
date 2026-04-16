@@ -43,7 +43,9 @@ export const tenantResolver = async (req, res, next) => {
     }
     
     if (slug) {
-      const requestedTenant = await Tenant.findOne({ slug, status: 'active' });
+      // ✅ Asegurar que slug sea string para prevenir NoSQL Injection
+      const slugStr = String(slug);
+      const requestedTenant = await Tenant.findOne({ slug: slugStr, status: 'active' });
       if (requestedTenant) {
         req.requestedTenant = requestedTenant;  // ✅ No sobrescribir req.tenant
       }

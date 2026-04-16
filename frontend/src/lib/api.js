@@ -11,12 +11,13 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
+  withCredentials: true, // ✅ Importante para cookies HttpOnly
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor para agregar token
+// Interceptor para agregar token (solo si existe en memoria o localStorage antiguo)
 api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
