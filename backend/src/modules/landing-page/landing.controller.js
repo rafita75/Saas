@@ -74,11 +74,13 @@ export const getLandingById = asyncHandler(async (req, res) => {
   res.json({ success: true, landing });
 });
 
+import { generateSlug } from '../../core/utils/slug.js';
+
 /**
  * Crear una nueva landing page con validación de límites de plan
  */
 export const createLanding = asyncHandler(async (req, res) => {
-  const { name, path, sections, theme, seo } = req.body;
+  let { name, path, sections, theme, seo } = req.body;
 
   // 1. Obtener límites del plan actual
   const subscription = await TenantModule.findOne({
@@ -101,17 +103,28 @@ export const createLanding = asyncHandler(async (req, res) => {
   if (currentPageCount >= maxPages) {
     return res.status(403).json({ 
       success: false, 
-      error: `Has alcanzado el límite de tu plan (${maxPages} página/s). Mejora tu plan para crear más.` 
+      error: `Límite alcanzado (${maxPages} página/s). Mejora tu plan.` 
     });
   }
 
-  // 3. Validar path único por tenant
-  const pathExists = await LandingPage.findOne({ tenantId: req.tenant._id, path });
-  if (pathExists) {
-    return res.status(400).json({ success: false, error: 'Ya existe una página con esa URL' });
+  // 3. Lógica inteligente de Path
+  // Si no hay páginas, la primera es siempre Inicio (/)
+  if (currentPageCount === 0) {
+    path = '/';
+  } else {
+    // Generar path amigable desde el nombre si no viene uno válido
+    if (!path || path === '/' || path.includes(Date.now().toString().substring(0, 5))) {
+      path = `/${generateSlug(name)}`;
+    }
   }
 
-  // 4. Crear página
+  // 4. Validar path único por tenant
+  const pathExists = await LandingPage.findOne({ tenantId: req.tenant._id, path });
+  if (pathExists) {
+    return res.status(400).json({ success: false, error: 'Esa URL ya está en uso por otra de tus páginas.' });
+  }
+
+  // 5. Crear página
   const landing = await LandingPage.create({
     tenantId: req.tenant._id,
     name,

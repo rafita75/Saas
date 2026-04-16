@@ -4,7 +4,7 @@ import api from '../../../lib/api';
 import { Sparkles, Building2, Globe, ArrowRight, Menu as MenuIcon, X } from 'lucide-react';
 
 const PublicLanding = () => {
-  const { publicSlug: paramSlug, path: urlPath } = useParams();
+  const { path: urlPath } = useParams();
   const [tenant, setTenant] = useState(null);
   const [page, setPage] = useState(null);
   const [menu, setMenu] = useState([]); 
@@ -12,13 +12,18 @@ const PublicLanding = () => {
   const [error, setError] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Detectar slug desde el subdominio
   const getSlugFromHost = () => {
-    if (paramSlug) return paramSlug;
     const hostname = window.location.hostname;
     const parts = hostname.split('.');
     const isLocalhost = hostname.includes('localhost');
-    if (isLocalhost && parts.length >= 2 && parts[0] !== 'localhost') return parts[0];
+    
+    // En producción: tienda.jgsystemsgt.com (3 partes, la primera es el slug)
     if (!isLocalhost && parts.length >= 3) return parts[0];
+    
+    // En desarrollo: tienda.localhost:5173 (2 o 3 partes, la primera es el slug)
+    if (isLocalhost && parts.length >= 2 && parts[0] !== 'localhost') return parts[0];
+    
     return null;
   };
 
@@ -26,29 +31,35 @@ const PublicLanding = () => {
 
   useEffect(() => {
     const fetchPublicData = async () => {
+      if (!publicSlug) {
+        setError('No se pudo identificar el negocio desde la URL.');
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        // 1. Obtener datos del tenant y lista de páginas para el menú
-        const [tenantRes, menuRes] = await Promise.all([
-          api.get(`/tenants/public/${publicSlug}`),
-          api.get(`/landings/public/menu/${publicSlug}`)
-        ]);
-        
+        // 1. Obtener datos del negocio
+        const tenantRes = await api.get(`/tenants/public/${publicSlug}`);
         setTenant(tenantRes.data.tenant);
+
+        // 2. Obtener lista de páginas para el Navbar
+        const menuRes = await api.get(`/landings/public/menu/${publicSlug}`);
         setMenu(menuRes.data.landings || []);
 
-        // 2. Obtener la página solicitada (o root si es la principal)
+        // 3. Obtener el contenido de la página actual
         const pathKey = urlPath || 'root';
         const pageRes = await api.get(`/landings/public/path/${pathKey}`);
         setPage(pageRes.data.landing);
       } catch (err) {
-        setError(err.response?.data?.error || 'No se pudo cargar la página');
+        console.error('Error fetching public data:', err);
+        setError(err.response?.data?.error || 'Página no disponible en este momento.');
       } finally {
         setLoading(false);
       }
     };
 
-    if (publicSlug) fetchPublicData();
+    fetchPublicData();
   }, [publicSlug, urlPath]);
 
   if (loading) {
@@ -65,11 +76,11 @@ const PublicLanding = () => {
         <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6 border border-red-500/20">
           <Globe className="text-red-400 w-10 h-10" />
         </div>
-        <h1 className="text-2xl font-bold text-white mb-2">Página no disponible</h1>
-        <p className="text-slate-400 max-w-md mb-8">{error || 'El negocio solicitado no existe o no tiene una página pública habilitada.'}</p>
-        <Link to="/" className="px-6 py-2 bg-dark-800 border border-slate-700 text-white rounded-xl hover:bg-dark-700 transition-all">
-          Volver al inicio
-        </Link>
+        <h1 className="text-2xl font-bold text-white mb-2">Ops! Página no disponible</h1>
+        <p className="text-slate-400 max-w-md mb-8">{error}</p>
+        <a href="https://jgsystemsgt.com" className="px-8 py-3 bg-primary text-white rounded-2xl font-bold hover:glow-effect transition-all">
+          Ir a ModularBusiness
+        </a>
       </div>
     );
   }
@@ -78,21 +89,21 @@ const PublicLanding = () => {
     switch (section.type) {
       case 'hero':
         return (
-          <section key={idx} className="relative pt-20 pb-32 px-6 overflow-hidden">
-            <div className="max-w-4xl mx-auto text-center relative z-10">
-              <h1 className="text-5xl md:text-7xl font-extrabold mb-8 leading-[1.1] text-white">
+          <section key={idx} className="relative pt-24 pb-32 px-6 overflow-hidden">
+            <div className="max-w-5xl mx-auto text-center relative z-10">
+              <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight text-white tracking-tighter">
                 {section.content.title}
               </h1>
-              <p className="text-slate-400 text-lg md:text-xl mb-12 max-w-2xl mx-auto">
+              <p className="text-slate-400 text-lg md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed">
                 {section.content.description}
               </p>
               {section.content.ctaText && (
-                <button className="px-10 py-4 bg-primary text-white rounded-2xl font-bold hover:glow-effect transition-all">
+                <button className="px-12 py-5 bg-primary text-white rounded-[24px] font-black text-lg hover:glow-effect transition-all">
                   {section.content.ctaText}
                 </button>
               )}
               {section.content.image && (
-                <div className="mt-16 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+                <div className="mt-20 rounded-[48px] overflow-hidden border border-white/10 shadow-2xl max-w-4xl mx-auto ring-1 ring-white/20">
                   <img src={section.content.image} alt="Hero" className="w-full h-auto" />
                 </div>
               )}
@@ -101,14 +112,17 @@ const PublicLanding = () => {
         );
       case 'features':
         return (
-          <section key={idx} className="py-24 px-6 bg-dark-900/50">
-            <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl font-bold text-center mb-16 text-white">{section.content.title || 'Nuestros Beneficios'}</h2>
-              <div className="grid md:grid-cols-3 gap-8">
+          <section key={idx} className="py-32 px-6 bg-white/5 border-y border-white/5">
+            <div className="max-w-7xl mx-auto">
+              <h2 className="text-4xl md:text-5xl font-black text-center mb-20 text-white tracking-tight">{section.content.title || '¿Por qué elegirnos?'}</h2>
+              <div className="grid md:grid-cols-3 gap-12">
                 {section.content.items?.map((item, i) => (
-                  <div key={i} className="p-8 rounded-3xl bg-dark-800 border border-white/5 hover:border-primary/30 transition-all">
-                    <h4 className="text-xl font-bold text-white mb-4">{item.title}</h4>
-                    <p className="text-slate-400 text-sm leading-relaxed">{item.description}</p>
+                  <div key={i} className="p-10 rounded-[40px] bg-dark-800 border border-white/5 hover:border-primary/40 transition-all group">
+                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+                      <Sparkles className="text-primary" />
+                    </div>
+                    <h4 className="text-2xl font-bold text-white mb-4">{item.title}</h4>
+                    <p className="text-slate-400 text-base leading-relaxed">{item.description}</p>
                   </div>
                 ))}
               </div>
@@ -117,26 +131,24 @@ const PublicLanding = () => {
         );
       case 'contact':
         return (
-          <section key={idx} className="py-24 px-6">
-            <div className="max-w-2xl mx-auto text-center">
-              <h2 className="text-3xl font-bold mb-4 text-white">{section.content.title}</h2>
-              <p className="text-slate-400 mb-12">{section.content.description}</p>
-              <div className="grid gap-4 max-w-sm mx-auto">
-                {section.content.email && <div className="p-4 bg-dark-800 rounded-2xl border border-white/5 text-primary font-medium">{section.content.email}</div>}
-                {section.content.phone && <div className="p-4 bg-dark-800 rounded-2xl border border-white/5 text-slate-300 font-medium">{section.content.phone}</div>}
+          <section key={idx} className="py-32 px-6">
+            <div className="max-w-4xl mx-auto glass rounded-[64px] p-16 border border-white/5 text-center">
+              <h2 className="text-4xl md:text-5xl font-black mb-6 text-white tracking-tight">{section.content.title}</h2>
+              <p className="text-slate-400 text-lg mb-16 max-w-2xl mx-auto">{section.content.description}</p>
+              <div className="flex flex-col md:flex-row items-center justify-center gap-8">
+                {section.content.email && (
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Email</p>
+                    <p className="text-2xl font-bold text-primary">{section.content.email}</p>
+                  </div>
+                )}
+                {section.content.phone && (
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Teléfono</p>
+                    <p className="text-2xl font-bold text-white">{section.content.phone}</p>
+                  </div>
+                )}
               </div>
-            </div>
-          </section>
-        );
-      case 'cta':
-        return (
-          <section key={idx} className="py-20 px-6 bg-primary/10">
-            <div className="max-w-4xl mx-auto text-center space-y-8">
-              <h2 className="text-4xl font-bold text-white">{section.content.title}</h2>
-              <p className="text-slate-300 text-lg">{section.content.description}</p>
-              <button className="px-8 py-3 bg-white text-black rounded-xl font-bold hover:scale-105 transition-all">
-                {section.content.buttonText || 'Contactar'}
-              </button>
             </div>
           </section>
         );
@@ -146,72 +158,75 @@ const PublicLanding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-950 text-white selection:bg-primary/30">
-      {/* Navbar Dinámico - Verificación de seguridad para tenant */}
-      <nav className="h-20 border-b border-white/5 flex items-center justify-between px-6 lg:px-12 backdrop-blur-xl sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-dark-800 border border-white/10 flex items-center justify-center overflow-hidden">
-            {tenant?.logo ? (
+    <div className="min-h-screen bg-dark-950 text-white selection:bg-primary/30 font-sans">
+      {/* Navbar Dinámico Premium */}
+      <nav className="h-24 border-b border-white/5 flex items-center justify-between px-8 lg:px-16 backdrop-blur-2xl sticky top-0 z-50 bg-dark-950/80">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-[18px] bg-dark-800 border border-white/10 flex items-center justify-center overflow-hidden shadow-xl">
+            {tenant.logo ? (
               <img src={tenant.logo} alt={tenant.name} className="w-full h-full object-cover" />
             ) : (
               <Building2 className="text-primary w-6 h-6" />
             )}
           </div>
-          <span className="font-bold text-xl tracking-tight">{tenant?.name || 'Cargando...'}</span>
+          <span className="font-black text-2xl tracking-tighter text-white">{tenant.name}</span>
         </div>
 
         {/* Menú de escritorio */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-10">
           {menu.map((item) => (
             <Link 
               key={item._id} 
               to={item.path === '/' ? '/' : `${item.path}`}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
+              className={`text-sm font-black uppercase tracking-widest transition-all hover:text-primary ${
                 (urlPath === item.path.replace('/', '') || (!urlPath && item.path === '/')) 
-                ? 'text-primary' : 'text-slate-400'
+                ? 'text-primary' : 'text-slate-500'
               }`}
             >
               {item.name}
             </Link>
           ))}
-          <button className="px-6 py-2 bg-primary text-white rounded-full font-medium hover:glow-effect transition-all text-sm">
-            Contactar
+          <button className="ml-4 px-8 py-3 bg-white text-black rounded-full font-black text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-xl shadow-white/5">
+            Reservar / Cita
           </button>
         </div>
 
         {/* Botón móvil */}
-        <button className="md:hidden p-2 text-slate-400" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+        <button className="lg:hidden p-3 bg-white/5 rounded-2xl text-slate-400" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X /> : <MenuIcon />}
         </button>
       </nav>
 
       {/* Menú móvil */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 top-20 bg-dark-950 z-40 p-6 md:hidden animate-in slide-in-from-top duration-300">
-          <div className="flex flex-col gap-6">
+        <div className="fixed inset-0 top-24 bg-dark-950 z-[60] p-10 lg:hidden animate-in slide-in-from-right duration-500">
+          <div className="flex flex-col gap-8">
             {menu.map((item) => (
               <Link 
                 key={item._id} 
                 to={item.path === '/' ? '/' : `${item.path}`}
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-2xl font-bold text-white hover:text-primary transition-colors"
+                className="text-5xl font-black text-white hover:text-primary transition-colors tracking-tighter"
               >
                 {item.name}
               </Link>
             ))}
-            <button className="w-full py-4 bg-primary text-white rounded-2xl font-bold">
-              Contactar Ahora
+            <hr className="border-white/5 my-4" />
+            <button className="w-full py-6 bg-primary text-white rounded-[32px] font-black text-xl shadow-2xl">
+              Contacto Directo
             </button>
           </div>
         </div>
       )}
 
       {/* Contenido Dinámico */}
-      <main>
-        {!page || page.sections.length === 0 ? (
-          <div className="py-40 text-center">
-            <h2 className="text-4xl font-bold text-white mb-4">Bienvenido a {tenant.name}</h2>
-            <p className="text-slate-400">Página en construcción.</p>
+      <main className="animate-fade-in">
+        {!page || page.sections?.length === 0 ? (
+          <div className="py-60 text-center px-6">
+            <h2 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter">Bienvenido a {tenant.name}</h2>
+            <p className="text-slate-500 text-xl max-w-2xl mx-auto leading-relaxed font-medium">
+              Nuestra presencia digital está siendo esculpida. <br />Regresa pronto para descubrir todo lo que tenemos para ti.
+            </p>
           </div>
         ) : (
           page.sections.map((section, idx) => renderSection(section, idx))
@@ -219,10 +234,12 @@ const PublicLanding = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-white/5 text-center">
-        <p className="text-slate-500 text-sm flex items-center justify-center gap-2">
-          Potenciado por <Sparkles size={14} className="text-primary" /> <span className="font-bold text-slate-400">ModularBusiness</span>
-        </p>
+      <footer className="py-20 border-t border-white/5 bg-dark-900/20">
+        <div className="max-w-7xl mx-auto px-8 text-center">
+          <p className="text-slate-600 text-xs font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3">
+            Powered by <Sparkles size={16} className="text-primary" /> <span className="text-slate-400">ModularBusiness</span>
+          </p>
+        </div>
       </footer>
     </div>
   );
