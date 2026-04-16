@@ -249,11 +249,15 @@ export const removeMember = asyncHandler(async (req, res) => {
   res.json({ success: true, message: "Miembro eliminado correctamente" });
 });
 
-// ✅ NUEVO: Obtener datos públicos del tenant por su publicSlug
 export const getPublicTenant = asyncHandler(async (req, res) => {
   const { publicSlug } = req.params;
   
-  const tenant = await Tenant.findOne({ publicSlug, status: 'active' });
+  // Buscar por publicSlug primero, fallback a slug administrativo
+  let tenant = await Tenant.findOne({ publicSlug, status: 'active' });
+  
+  if (!tenant) {
+    tenant = await Tenant.findOne({ slug: publicSlug, status: 'active' });
+  }
   
   if (!tenant) {
     return res.status(404).json({ success: false, error: 'Negocio no encontrado' });

@@ -158,22 +158,21 @@ export const updateLanding = asyncHandler(async (req, res) => {
 });
 
 /**
- * Eliminar (desactivar) una landing page
+ * Eliminar una landing page
  */
 export const deleteLanding = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const landing = await LandingPage.findOneAndUpdate(
-    { _id: id, tenantId: req.tenant._id },
-    { isActive: false },
-    { new: true }
-  );
+  const landing = await LandingPage.findOneAndDelete({ 
+    _id: id, 
+    tenantId: req.tenant._id 
+  });
 
   if (!landing) {
     return res.status(404).json({ success: false, error: 'Página no encontrada' });
   }
 
-  res.json({ success: true, message: 'Página eliminada correctamente' });
+  res.json({ success: true, message: 'Página eliminada definitivamente' });
 });
 
 /**
@@ -182,7 +181,13 @@ export const deleteLanding = asyncHandler(async (req, res) => {
 export const getTenantPages = asyncHandler(async (req, res) => {
   const { publicSlug } = req.params;
   
-  const tenant = await Tenant.findOne({ publicSlug, status: 'active' });
+  // Buscar por publicSlug primero, fallback a slug administrativo
+  let tenant = await Tenant.findOne({ publicSlug, status: 'active' });
+  
+  if (!tenant) {
+    tenant = await Tenant.findOne({ slug: publicSlug, status: 'active' });
+  }
+
   if (!tenant) return res.status(404).json({ success: false, error: 'Negocio no encontrado' });
 
   const landings = await LandingPage.find({ 

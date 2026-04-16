@@ -7,13 +7,18 @@ import { Tenant } from '../models/Tenant.js';
 export const tenantResolver = async (req, res, next) => {
   try {
     let slug = null;
+
+    // 1. PRIORIDAD MÁXIMA: Header (Para comunicación Vercel -> Render)
+    if (req.headers['x-tenant-slug']) {
+      slug = req.headers['x-tenant-slug'];
+    }
     
-    // 1. Prioridad: params de la URL
-    if (req.params.slug) {
+    // 2. Prioridad: params de la URL
+    if (!slug && req.params.slug) {
       slug = req.params.slug;
     }
     
-    // 2. Subdominio
+    // 3. Subdominio (Solo si no hay nada anterior)
     if (!slug) {
       const hostname = req.headers.host || '';
       const parts = hostname.split('.');
@@ -59,6 +64,11 @@ export const tenantResolver = async (req, res, next) => {
         // 2. Si es subdominio directo (ej. tienda.jgsystemsgt.com)
         // buscamos por el publicSlug.
         requestedTenant = await Tenant.findOne({ publicSlug: slugStr, status: 'active' });
+
+        // ✅ FALLBACK: Si no lo encuentra por publicSlug, buscar por slug normal (Para negocios antiguos)
+        if (!requestedTenant) {
+          requestedTenant = await Tenant.findOne({ slug: slugStr, status: 'active' });
+        }
       }
 
       if (requestedTenant) {

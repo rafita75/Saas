@@ -17,7 +17,12 @@ const PublicLanding = () => {
     const hostname = window.location.hostname;
     const parts = hostname.split('.');
     const isLocalhost = hostname.includes('localhost');
+    const isVercel = hostname.includes('vercel.app');
+    const isRender = hostname.includes('onrender.com');
     
+    // Si estamos en Vercel/Render directo, no hay slug en el host
+    if (isVercel || isRender) return null;
+
     // En producción: tienda.jgsystemsgt.com (3 partes, la primera es el slug)
     if (!isLocalhost && parts.length >= 3) return parts[0];
     
@@ -32,24 +37,30 @@ const PublicLanding = () => {
   useEffect(() => {
     const fetchPublicData = async () => {
       if (!publicSlug) {
-        setError('No se pudo identificar el negocio desde la URL.');
+        // No intentar cargar si no hay slug (estamos en el dominio principal)
         setLoading(false);
         return;
       }
 
       try {
         setLoading(true);
-        // 1. Obtener datos del negocio
-        const tenantRes = await api.get(`/tenants/public/${publicSlug}`);
+        // 1. Obtener datos del negocio (Pasamos el slug también por header para seguridad extra)
+        const tenantRes = await api.get(`/tenants/public/${publicSlug}`, {
+          headers: { 'x-tenant-slug': publicSlug }
+        });
         setTenant(tenantRes.data.tenant);
 
         // 2. Obtener lista de páginas para el Navbar
-        const menuRes = await api.get(`/landings/public/menu/${publicSlug}`);
+        const menuRes = await api.get(`/landings/public/menu/${publicSlug}`, {
+          headers: { 'x-tenant-slug': publicSlug }
+        });
         setMenu(menuRes.data.landings || []);
 
         // 3. Obtener el contenido de la página actual
         const pathKey = urlPath || 'root';
-        const pageRes = await api.get(`/landings/public/path/${pathKey}`);
+        const pageRes = await api.get(`/landings/public/path/${pathKey}`, {
+          headers: { 'x-tenant-slug': publicSlug }
+        });
         setPage(pageRes.data.landing);
       } catch (err) {
         console.error('Error fetching public data:', err);

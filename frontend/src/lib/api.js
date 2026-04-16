@@ -15,12 +15,29 @@ const api = axios.create({
   },
 });
 
-// Interceptor para agregar token (solo si existe en memoria o localStorage antiguo)
+// Interceptor para agregar token y slug de tenant
 api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // ✅ Inyectar SLUG del subdominio actual para que el backend lo reconozca
+  const hostname = window.location.hostname;
+  const parts = hostname.split('.');
+  const isLocalhost = hostname.includes('localhost');
+  const isAdmin = hostname.startsWith('admin.');
+  
+  let slug = null;
+  if (!isAdmin) {
+    if (isLocalhost && parts.length >= 2 && parts[0] !== 'localhost') slug = parts[0];
+    else if (!isLocalhost && parts.length >= 3 && parts[0] !== 'www') slug = parts[0];
+  }
+
+  if (slug) {
+    config.headers['x-tenant-slug'] = slug;
+  }
+  
   return config;
 });
 

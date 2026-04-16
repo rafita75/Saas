@@ -52,9 +52,12 @@ function AppRoutes() {
   // En localhost (2 partes): tienda.localhost
   let publicSlug = null;
   if (!isAdmin) {
+    const isVercel = hostname.includes('vercel.app');
+    const isRender = hostname.includes('onrender.com');
+
     if (isLocalhost && parts.length >= 2 && parts[0] !== 'localhost') {
       publicSlug = parts[0];
-    } else if (!isLocalhost && parts.length >= 3 && parts[0] !== 'www') {
+    } else if (!isLocalhost && !isVercel && !isRender && parts.length >= 3 && parts[0] !== 'www') {
       publicSlug = parts[0];
     }
   }
