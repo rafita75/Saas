@@ -1,9 +1,8 @@
 import React from 'react';
-import { Zap, ShieldCheck, Rocket, Layout, Globe, MessageSquare } from 'lucide-react';
+import { Zap, ShieldCheck, Rocket, Layout, Globe, MessageSquare, ArrowRight } from 'lucide-react';
 
 /**
  * FeaturesBento: Diseño de cuadrícula asimétrica premium.
- * Ideal para mostrar múltiples beneficios con una jerarquía visual moderna.
  */
 const FeaturesBento = ({ content, isPreview = false }) => {
   const { 
@@ -12,7 +11,6 @@ const FeaturesBento = ({ content, isPreview = false }) => {
     items = []
   } = content;
 
-  // Iconos predefinidos para las tarjetas
   const icons = [Zap, ShieldCheck, Rocket, Layout, Globe, MessageSquare];
 
   return (
@@ -29,13 +27,12 @@ const FeaturesBento = ({ content, isPreview = false }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-6 gap-6 lg:gap-8 auto-rows-[300px] lg:auto-rows-[350px]">
         {items.slice(0, 5).map((item, i) => {
-          // Lógica de Grid Bento (Asimétrico)
           const gridClasses = [
-            'md:col-span-3 md:row-span-2', // Grande
-            'md:col-span-3 md:row-span-1', // Mediano
-            'md:col-span-3 md:row-span-1', // Mediano
-            'md:col-span-2 md:row-span-1', // Pequeño
-            'md:col-span-4 md:row-span-1', // Ancho
+            'md:col-span-3 md:row-span-2', 
+            'md:col-span-3 md:row-span-1', 
+            'md:col-span-3 md:row-span-1', 
+            'md:col-span-2 md:row-span-1', 
+            'md:col-span-4 md:row-span-1', 
           ];
 
           const Icon = icons[i % icons.length];
@@ -61,7 +58,6 @@ const FeaturesBento = ({ content, isPreview = false }) => {
                  </p>
               </div>
 
-              {/* Decoración de esquina */}
               <div className="absolute bottom-6 right-8 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                  <ArrowRight className="text-primary w-8 h-8" />
               </div>
