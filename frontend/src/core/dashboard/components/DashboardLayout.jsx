@@ -1,28 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Package,
-  ShoppingBag,
   Users,
   Settings,
   LogOut,
   Menu,
   X,
   Sparkles,
-  Store,
-  Calendar,
-  Calculator,
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { clearAuthCookies, parseSessionJSON } from '../../../lib/cookies';
 import { getMainUrl } from '../../../config/domains';
+import MODULES_REGISTRY from '../../../config/modules';
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeModules, setActiveModules] = useState([]);
   
   const user = parseSessionJSON('user', {});
   const tenant = parseSessionJSON('tenant', {});
+
+  useEffect(() => {
+    const fetchActiveModules = async () => {
+      try {
+        const response = await api.get('/modules/tenant/me');
+        setActiveModules(response.data.modules);
+      } catch (err) {
+        console.error('Error al cargar módulos activos');
+      }
+    };
+    fetchActiveModules();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -30,19 +39,40 @@ const DashboardLayout = () => {
     } catch (error) {
       console.error('Error en logout:', error);
     } finally {
-      // ✅ Limpiar cookies y localStorage
       clearAuthCookies();
       localStorage.clear();
-      // ✅ URL dinámica
       window.location.href = getMainUrl();
     }
   };
 
-  const menuItems = [
+  // 1. Menú Core (Siempre visible)
+  const coreMenuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: `/dashboard` },
+  ];
+
+  // 2. Menú de Módulos (Dinámico)
+  const moduleMenuItems = activeModules.flatMap(am => {
+    // Buscar el manifiesto del módulo por su slug
+    const moduleManifest = MODULES_REGISTRY.find(m => m.slug === am.moduleId.slug);
+    if (!moduleManifest) return [];
+
+    // Extraer las rutas marcadas como visibles para el menú
+    return moduleManifest.routes
+      .filter(route => !route.hidden)
+      .map(route => ({
+        icon: route.icon || moduleManifest.icon,
+        label: route.label || moduleManifest.name,
+        path: `/${route.path}`
+      }));
+  });
+
+  // 3. Menú de Gestión (Al final)
+  const managementMenuItems = [
     { icon: Users, label: 'Equipo', path: `/team` },
     { icon: Settings, label: 'Configuración', path: `/settings` },
   ];
+
+  const menuItems = [...coreMenuItems, ...moduleMenuItems, ...managementMenuItems];
 
   return (
     <div className="min-h-screen bg-dark-950 flex">
@@ -66,9 +96,9 @@ const DashboardLayout = () => {
         <div className="p-4 border-b border-primary/10">
           <p className="text-xs text-slate-500 mb-1">Negocio</p>
           <p className="text-white font-medium truncate">{tenant.name || 'Mi Negocio'}</p>
-          <p className="text-xs text-slate-500 mt-2 mb-1">Plan</p>
-          <span className="inline-flex items-center gap-1 bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">
-            <Sparkles size={10} /> Activo
+          <p className="text-xs text-slate-500 mt-2 mb-1">Ecosistema</p>
+          <span className="inline-flex items-center gap-1 bg-primary/20 text-primary text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
+            {activeModules.length} Módulos Activos
           </span>
         </div>
 
