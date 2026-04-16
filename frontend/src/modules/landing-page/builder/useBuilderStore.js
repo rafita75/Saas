@@ -15,13 +15,23 @@ const useBuilderStore = create((set) => ({
   // Selección de Sección
   setSelectedSectionIndex: (index) => set({ selectedSectionIndex: index }),
   
-  // Actualización de Contenido (Edición Inline / Sidebar)
+  // Acciones de Tema (Global)
+  updateTheme: (field, value) => set((state) => ({
+    pageData: { ...state.pageData, theme: { ...state.pageData.theme, [field]: value } }
+  })),
+
+  // Actualización de Contenido y Configuración (Local de sección)
   updateSectionContent: (field, value) => set((state) => {
     if (state.selectedSectionIndex === null) return state;
     const newSections = [...state.pageData.sections];
     newSections[state.selectedSectionIndex].content[field] = value;
     return { pageData: { ...state.pageData, sections: newSections } };
   }),
+
+  // Reordenar Secciones (D&D)
+  reorderSections: (newSections) => set((state) => ({
+    pageData: { ...state.pageData, sections: newSections }
+  })),
 
   // Actualización de Ítems (Listas como Precios/Features)
   updateListItem: (itemIdx, field, value) => set((state) => {

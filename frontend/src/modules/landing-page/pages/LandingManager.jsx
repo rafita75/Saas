@@ -129,7 +129,7 @@ const LandingManager = () => {
                          <Edit3 size={16} />
                       </button>
                       <a 
-                        href={getPublicUrl(`${tenant.publicSlug}/${landing.path}`)} 
+                        href={`${window.location.protocol}//${tenant.publicSlug}.jgsystemsgt.com${landing.path === 'root' ? '' : `/${landing.path}`}`} 
                         target="_blank" 
                         rel="noreferrer"
                         className="p-3 bg-white/[0.03] border border-white/5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all"

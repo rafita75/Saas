@@ -97,15 +97,24 @@ const LandingEditor = () => {
           <button 
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
             className="p-2 text-slate-500 hover:text-white bg-white/[0.03] border border-white/5 rounded-xl transition-all"
+            title="Contraer Menú"
           >
             {isSidebarCollapsed ? <PanelLeftOpen size={18}/> : <PanelLeftClose size={18}/>}
+          </button>
+          <div className="h-6 w-px bg-white/10" />
+          <button 
+            onClick={() => navigate(`/${tenant?.slug}/landings`)}
+            className="p-2 text-slate-400 hover:text-white bg-white/[0.03] border border-white/5 rounded-xl transition-all flex items-center gap-2 group"
+          >
+            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="text-[10px] font-black uppercase tracking-widest hidden md:block">Salir</span>
           </button>
           <div className="h-6 w-px bg-white/10" />
           <input 
             type="text" 
             value={pageData.name} 
             onChange={(e) => setPageData({...pageData, name: e.target.value})} 
-            className="bg-transparent text-sm font-black text-white uppercase tracking-widest outline-none border-b border-transparent focus:border-indigo-500 w-64" 
+            className="bg-transparent text-sm font-black text-white uppercase tracking-widest outline-none border-b border-transparent focus:border-indigo-500 w-64 ml-2" 
             placeholder="NOMBRE DE LA PÁGINA" 
           />
         </div>
@@ -151,6 +160,26 @@ const LandingEditor = () => {
                 </div>
 
                 <div className="space-y-6">
+                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-l-2 border-indigo-600 pl-3">Ajustes de Diseño</p>
+
+                   {/* Selector de Layout - Solo si aplica (ej. Hero) */}
+                   {pageData.sections[selectedSectionIndex].type === 'hero' && (
+                     <div className="space-y-3">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Disposición de Imagen</label>
+                        <div className="grid grid-cols-3 gap-2">
+                           {['reversed', 'split', 'centered'].map(l => (
+                             <button 
+                               key={l}
+                               onClick={() => updateSectionContent('layout', l)}
+                               className={`py-2 rounded-lg border text-[8px] font-black uppercase transition-all ${pageData.sections[selectedSectionIndex].content.layout === l ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white/5 border-white/5 text-slate-500 hover:text-white'}`}
+                             >
+                               {l === 'reversed' ? 'Izquierda' : l === 'split' ? 'Derecha' : 'Centro'}
+                             </button>
+                           ))}
+                        </div>
+                     </div>
+                   )}
+
                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-l-2 border-indigo-600 pl-3">Contenido del Bloque</p>
                    {Object.entries(pageData.sections[selectedSectionIndex].content).map(([key, val]) => {
                      if (['items', 'stats', 'action', 'secondaryAction', 'layout', 'image'].includes(key)) return null;
@@ -186,6 +215,28 @@ const LandingEditor = () => {
               </div>
             ) : (
               <div className="space-y-12">
+                {/* Identidad Visual Global */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 border-b border-white/[0.05] pb-4">
+                    <div className="p-2 bg-indigo-600/10 rounded-lg"><Palette size={14} className="text-indigo-500" /></div>
+                    <h3 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Identidad Visual</h3>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl group">
+                       <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-indigo-400 transition-colors">Primario</span>
+                       <input type="color" value={pageData.theme?.primaryColor || '#4f46e5'} onChange={(e) => updateTheme('primaryColor', e.target.value)} className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer" />
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl group">
+                       <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-indigo-400 transition-colors">Fondo</span>
+                       <input type="color" value={pageData.theme?.backgroundColor || '#ffffff'} onChange={(e) => updateTheme('backgroundColor', e.target.value)} className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer" />
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl group">
+                       <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-indigo-400 transition-colors">Texto</span>
+                       <input type="color" value={pageData.theme?.textColor || '#0f172a'} onChange={(e) => updateTheme('textColor', e.target.value)} className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer" />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 border-b border-white/[0.05] pb-4">
                     <div className="p-2 bg-indigo-600/10 rounded-lg"><Layers size={14} className="text-indigo-500" /></div>
