@@ -156,7 +156,6 @@ const LandingEditor = () => {
             <div key={template.id} className="glass rounded-[40px] border border-white/5 overflow-hidden group hover:border-primary/50 transition-all flex flex-col">
               <div className="aspect-video bg-dark-800 relative flex items-center justify-center">
                 <div className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity">
-                   {/* Aquí simulamos una miniatura basada en el layout del hero */}
                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
                       <Layout size={48} className="text-white/20" />
                    </div>
@@ -183,7 +182,7 @@ const LandingEditor = () => {
   const selectedSection = selectedSectionIndex !== null ? pageData.sections[selectedSectionIndex] : null;
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col gap-6 animate-fade-in">
+    <div className="h-[calc(100vh-140px)] flex flex-col gap-6 animate-fade-in font-sans">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <button onClick={() => isNew ? setPageData({...pageData, sections: []}) : navigate(`/${tenant?.slug}/landings`)} className="p-2 bg-dark-800 border border-white/5 rounded-xl text-slate-400 hover:text-white transition-all"><ArrowLeft size={20} /></button>
@@ -290,15 +289,15 @@ const LandingEditor = () => {
           )}
           {activeTab === 'settings' && (
             <div className="max-w-2xl mx-auto py-20 px-8 space-y-8">
-              <h3 className="text-2xl font-black text-white">SEO Settings</h3>
+              <h3 className="text-2xl font-black text-white tracking-tighter">Posicionamiento SEO</h3>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase">Título Pestaña</label>
-                  <input type="text" value={pageData.seo.title} onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, title: e.target.value}})} className="w-full bg-dark-800 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none" />
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Título Pestaña</label>
+                  <input type="text" value={pageData.seo.title} onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, title: e.target.value}})} className="w-full bg-dark-800 border border-slate-700 rounded-xl px-6 py-4 text-white outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase">Meta Descripción</label>
-                  <textarea value={pageData.seo.description} onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, description: e.target.value}})} className="w-full bg-dark-800 border border-slate-700 rounded-xl px-4 py-3 text-white h-32 outline-none" />
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Meta Descripción</label>
+                  <textarea value={pageData.seo.description} onChange={(e) => setPageData({...pageData, seo: {...pageData.seo, description: e.target.value}})} className="w-full bg-dark-800 border border-slate-700 rounded-xl px-6 py-4 text-white h-48 outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
                 </div>
               </div>
             </div>
