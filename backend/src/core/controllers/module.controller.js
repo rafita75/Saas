@@ -215,18 +215,18 @@ export const subscribeToModule = asyncHandler(async (req, res) => {
     tenantId: req.tenant._id,
     moduleId,
     planId,
-    status: 'active', // TODO: Cambiar a 'pending' hasta que se pague
+    status: 'active', // ✅ ACTIVACIÓN INMEDIATA (Para pruebas sin pasarela de pago)
     startsAt,
     expiresAt,
     autoRenew,
   });
 
-  // TODO: Generar factura pendiente de pago
-
   res.status(201).json({
     success: true,
     module: tenantModule,
-    message: 'Módulo contratado. Pendiente de pago.',
+    message: plan.priceMonthly === 0 
+      ? 'Módulo activado correctamente.' 
+      : 'Módulo activado (Modo Prueba).',
   });
 });
 
