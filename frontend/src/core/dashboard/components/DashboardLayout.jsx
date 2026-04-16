@@ -40,13 +40,7 @@ const DashboardLayout = () => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: `/dashboard` },
-    { icon: Store, label: 'Tienda', path: `/dashboard/store` },
-    { icon: Package, label: 'Productos', path: `/dashboard/products` },
-    { icon: ShoppingBag, label: 'Órdenes', path: `/dashboard/orders` },
-    { icon: Users, label: 'Clientes', path: `/dashboard/customers` },
-    { icon: Calendar, label: 'Reservas', path: `/dashboard/bookings` },
-    { icon: Calculator, label: 'Finanzas', path: `/dashboard/finance` },
-    { icon: Settings, label: 'Configuración', path: `/dashboard/settings` },
+    { icon: Settings, label: 'Configuración', path: `/settings` },
   ];
 
   return (

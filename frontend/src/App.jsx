@@ -5,6 +5,7 @@ import SelectTenant from './core/auth/pages/SelectTenant';
 import Register from './core/auth/pages/Register';
 import DashboardLayout from './core/dashboard/components/DashboardLayout';
 import DashboardHome from './core/dashboard/pages/DashboardHome';
+import BusinessSettings from './core/dashboard/pages/BusinessSettings';
 import SelectModules from './core/onboarding/pages/SelectModules';
 import { ProtectedRoute } from './core/auth/components/ProtectedRoute';
 import { AuthProvider } from './core/auth/context/AuthContext';
@@ -61,6 +62,7 @@ function AppRoutes() {
         }>
           <Route index element={<DashboardHome />} />
           <Route path="dashboard" element={<DashboardHome />} />
+          <Route path="settings" element={<BusinessSettings />} />
         </Route>
         
         <Route path="/" element={<ExternalRedirect to={`${getAdminUrl(slug)}/dashboard`} />} />
