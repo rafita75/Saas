@@ -1,5 +1,5 @@
 import multer from 'multer';
-import { createCloudinaryStorage } from '../config/cloudinary.js';
+import { createCloudinaryStorage } from '../../config/cloudinary.js';
 
 /**
  * Middleware para subir el logo del negocio
