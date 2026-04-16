@@ -87,5 +87,3 @@ const PublicLanding = () => {
 };
 
 export default PublicLanding;
-
-export default PublicLanding;
